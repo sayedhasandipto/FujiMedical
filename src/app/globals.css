@@ -91,9 +91,22 @@
   background: linear-gradient(135deg, #007F5F 0%, #00644a 100%);
 }
 
+.slide-bg-1 {
+  background: linear-gradient(135deg, #00644a 0%, #003322 100%);
+}
+
+.slide-bg-2 {
+  background: linear-gradient(135deg, #004d34 0%, #002216 100%);
+}
+
+.slide-bg-3 {
+  background: linear-gradient(135deg, #00875A 0%, #004d34 100%);
+}
+
 body {
   min-height: max(884px, 100dvh);
   font-family: var(--font-public-sans);
   background-color: var(--background);
   color: var(--foreground);
 }
+
