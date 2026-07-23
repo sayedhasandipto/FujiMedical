@@ -1,28 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@600;700&family=Public+Sans:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import "tailwindcss";
 @import "@heroui/styles";
 @plugin "daisyui";
 
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f9f9fc;
+  --foreground: #1a1c1e;
+  
+  --font-manrope: 'Manrope', sans-serif;
+  --font-public-sans: 'Public Sans', sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme {
+  --color-on-secondary-container: #616363;
+  --color-surface-variant: #e2e2e5;
+  --color-outline-variant: #bdc9c2;
+  --color-on-surface-variant: #3e4944;
+  --color-on-primary: #ffffff;
+  --color-on-surface: #1a1c1e;
+  --color-surface-dim: #dadadc;
+  --color-secondary-container: #dfe0e0;
+  --color-on-tertiary-container: #edf6f3;
+  --color-error-container: #ffdad6;
+  --color-surface-container-high: #e8e8ea;
+  --color-on-tertiary: #ffffff;
+  --color-surface-tint: #006c50;
+  --color-tertiary-fixed: #dbe4e2;
+  --color-tertiary-fixed-dim: #bfc8c6;
+  --color-background: #f9f9fc;
+  --color-error: #ba1a1a;
+  --color-on-primary-fixed: #002116;
+  --color-primary-fixed-dim: #76d9b3;
+  --color-tertiary: #505957;
+  --color-on-secondary: #ffffff;
+  --color-on-tertiary-fixed: #151d1c;
+  --color-on-primary-container: #ceffe8;
+  --color-inverse-on-surface: #f0f0f3;
+  --color-primary-container: #007f5f;
+  --color-primary-fixed: #92f6ce;
+  --color-on-error: #ffffff;
+  --color-on-primary-fixed-variant: #00513c;
+  --color-secondary-fixed: #e2e2e2;
+  --color-tertiary-container: #68716f;
+  --color-surface-container-low: #f3f3f6;
+  --color-surface: #f9f9fc;
+  --color-inverse-surface: #2f3133;
+  --color-secondary-fixed-dim: #c6c6c7;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-secondary-fixed-variant: #454747;
+  --color-surface-container-highest: #e2e2e5;
+  --color-outline: #6e7a73;
+  --color-on-tertiary-fixed-variant: #404947;
+  --color-primary: #00644a;
+  --color-inverse-primary: #76d9b3;
+  --color-on-background: #1a1c1e;
+  --color-surface-bright: #f9f9fc;
+  --color-secondary: #5d5f5f;
+  --color-surface-container: #eeeef0;
+  --color-on-secondary-fixed: #1a1c1c;
+  --color-on-error-container: #93000a;
+
+  --spacing-unit: 8px;
+  --spacing-gutter: 24px;
+  --spacing-stack-sm: 8px;
+  --spacing-margin-desktop: 64px;
+  --spacing-container-max: 1280px;
+  --spacing-margin-mobile: 16px;
+  --spacing-stack-md: 16px;
+  --spacing-stack-lg: 32px;
+
+  --font-sans: var(--font-public-sans);
+  --font-manrope: var(--font-manrope);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, #007F5F 0%, #00644a 100%);
 }
 
 body {
-  background: var(--background);
+  min-height: max(884px, 100dvh);
+  font-family: var(--font-public-sans);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
