@@ -24,7 +24,7 @@ import {
   MdReceiptLong,
   MdGridView,
   MdMail,
-  MdMenu
+  MdMenu,
 } from "react-icons/md";
 import {
   FaStore,
@@ -35,7 +35,9 @@ import {
   FaHeartbeat,
   FaHeart,
   FaPills,
-  FaFileMedical
+  FaFileMedical,
+  FaHandHoldingMedical,
+  FaBrain,
 } from "react-icons/fa";
 
 export default function Home() {
@@ -54,7 +56,8 @@ export default function Home() {
       bgClass: "slide-bg-1",
       btnText: "Book Now",
       action: () => setIsBookModalOpen(true),
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB8YeXq691WKPk6-VbeWUYdbIzMtMXHoQ3u5bOfy2z754uJlW2eQpHnqPMnwAGgZjDFiottu72OTdMLrEGhcKmihKxsENhWDBNQOYTWJ-w6vq45RkiBkk0Gj-pWvbAsoTcu1x3x85KlYvPa41sAL15CJb2V95lNyXdx45KJvydXLHMidOaev5ligu0ofyX1cG95RRBTvoTaJ5z2spaPgW6UUB8RtpQ5OmaAavvlhBJ257fOyepBn0QMSXdzsekmdKm0gdU9IPwzGGeQ"
+      image:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuB8YeXq691WKPk6-VbeWUYdbIzMtMXHoQ3u5bOfy2z754uJlW2eQpHnqPMnwAGgZjDFiottu72OTdMLrEGhcKmihKxsENhWDBNQOYTWJ-w6vq45RkiBkk0Gj-pWvbAsoTcu1x3x85KlYvPa41sAL15CJb2V95lNyXdx45KJvydXLHMidOaev5ligu0ofyX1cG95RRBTvoTaJ5z2spaPgW6UUB8RtpQ5OmaAavvlhBJ257fOyepBn0QMSXdzsekmdKm0gdU9IPwzGGeQ",
     },
     {
       title: "Wholesale Medicines at Best Prices",
@@ -62,7 +65,8 @@ export default function Home() {
       bgClass: "slide-bg-2",
       btnText: "Browse Store",
       action: () => setActiveService("Store"),
-      image: "https://images.unsplash.com/photo-1607619056574-7b8d304f3c6f?w=400&auto=format&fit=crop&q=80"
+      image:
+        "https://images.unsplash.com/photo-1607619056574-7b8d304f3c6f?w=400&auto=format&fit=crop&q=80",
     },
     {
       title: "Instant Video Consultation",
@@ -70,8 +74,9 @@ export default function Home() {
       bgClass: "slide-bg-3",
       btnText: "Consult Now",
       action: () => setActiveService("Consult"),
-      image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&auto=format&fit=crop&q=80"
-    }
+      image:
+        "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&auto=format&fit=crop&q=80",
+    },
   ];
 
   // Auto-play carousel slides every 5 seconds (5000ms)
@@ -83,31 +88,158 @@ export default function Home() {
   }, [carouselSlides.length]);
 
   const categories = [
-    { id: "fever", name: "Fever", bnName: "জ্বর", icon: <MdDeviceThermostat className="w-7 h-7 md:w-10 md:h-10" /> },
-    { id: "cold", name: "Cold & Cough", bnName: "ঠান্ডা ও কাশি", icon: <MdAir className="w-7 h-7 md:w-10 md:h-10" /> },
-    { id: "gastric", name: "Gastric", bnName: "গ্যাস্ট্রিক", icon: <MdMedication className="w-7 h-7 md:w-10 md:h-10" /> },
-    { id: "pain", name: "Pain Relief", bnName: "ব্যথা নাশক", icon: <FaUserInjured className="w-7 h-7 md:w-10 md:h-10" /> },
-    { id: "skin", name: "Skin Care", bnName: "চর্মরোগ", icon: <MdCleanHands className="w-7 h-7 md:w-10 md:h-10" /> },
-    { id: "eye-ear", name: "Eye & Ear", bnName: "চোখ ও কান", icon: <MdVisibility className="w-7 h-7 md:w-10 md:h-10" /> },
-    { id: "vitamin", name: "Vitamin", bnName: "ভিটামিন", icon: <FaPills className="w-7 h-7 md:w-10 md:h-10" /> },
-    { id: "first-aid", name: "First Aid", bnName: "প্রাথমিক চিকিৎসা", icon: <FaFileMedical className="w-7 h-7 md:w-10 md:h-10" /> },
-    { id: "diabetes", name: "Diabetes", bnName: "ডায়াবেটিস", icon: <MdBloodtype className="w-7 h-7 md:w-10 md:h-10" /> },
-    { id: "heart", name: "Heart", bnName: "হৃদরোগ", icon: <FaHeartbeat className="w-7 h-7 md:w-10 md:h-10" /> },
-    { id: "baby", name: "Baby Care", bnName: "শিশুর যত্ন", icon: <MdChildCare className="w-7 h-7 md:w-10 md:h-10" /> },
-    { id: "women", name: "Women's Health", bnName: "নারীদের স্বাস্থ্য", icon: <MdFemale className="w-7 h-7 md:w-10 md:h-10" /> }
+    {
+      id: "cardiac",
+      name: "Cardiac",
+      bnName: "হৃদরোগ",
+      icon: <FaHeartbeat className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />,
+    },
+    {
+      id: "arthropathy",
+      name: "Arthropathy",
+      bnName: "বাতের ব্যথা",
+      icon: <FaUserInjured className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />,
+    },
+    {
+      id: "neurocare",
+      name: "Neurocare",
+      bnName: "স্নায়ু যত্ন",
+      icon: <FaBrain className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />,
+    },
+    {
+      id: "cold-flu",
+      name: "Cold & Flu",
+      bnName: "ঠান্ডা ও ফ্লু",
+      icon: <MdDeviceThermostat className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />,
+    },
+    {
+      id: "pharmacist-care",
+      name: "Pharmacist Care",
+      bnName: "ফার্মাসিস্ট সেবা",
+      icon: <FaHandHoldingMedical className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />,
+    },
+  ];
+
+  const products = [
+    {
+      id: "card-1",
+      name: "Atova 10",
+      generic: "Atorvastatin 10mg",
+      company: "Beximco Pharmaceuticals",
+      category: "cardiac",
+      price: 60,
+      unit: "10 Tablets (Strip)",
+      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+    },
+    {
+      id: "card-2",
+      name: "Cardoc 6.25",
+      generic: "Carvedilol 6.25mg",
+      company: "Square Pharmaceuticals",
+      category: "cardiac",
+      price: 40,
+      unit: "10 Tablets (Strip)",
+      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+    },
+    {
+      id: "arth-1",
+      name: "Naproxen 500",
+      generic: "Naproxen Sodium 500mg",
+      company: "Incepta Pharmaceuticals",
+      category: "arthropathy",
+      price: 80,
+      unit: "10 Tablets (Strip)",
+      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+    },
+    {
+      id: "arth-2",
+      name: "Xeldrin 50",
+      generic: "Diacerein 50mg",
+      company: "Aristopharma",
+      category: "arthropathy",
+      price: 150,
+      unit: "10 Capsules (Strip)",
+      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+    },
+    {
+      id: "neuro-1",
+      name: "Revotril 0.5",
+      generic: "Clonazepam 0.5mg",
+      company: "Roche / Radiant",
+      category: "neurocare",
+      price: 70,
+      unit: "10 Tablets (Strip)",
+      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+    },
+    {
+      id: "neuro-2",
+      name: "Pregaba 75",
+      generic: "Pregabalin 75mg",
+      company: "Beximco Pharmaceuticals",
+      category: "neurocare",
+      price: 120,
+      unit: "10 Capsules (Strip)",
+      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+    },
+    {
+      id: "cold-1",
+      name: "Napa Extend",
+      generic: "Paracetamol 665mg",
+      company: "Beximco Pharmaceuticals",
+      category: "cold-flu",
+      price: 18,
+      unit: "12 Tablets (Strip)",
+      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+    },
+    {
+      id: "cold-2",
+      name: "Fexo 120",
+      generic: "Fexofenadine 120mg",
+      company: "Square Pharmaceuticals",
+      category: "cold-flu",
+      price: 80,
+      unit: "10 Tablets (Strip)",
+      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+    },
+    {
+      id: "pharm-1",
+      name: "Eco-Orsal Oral Saline",
+      generic: "ORS Electrolyte",
+      company: "SMC Enterprise",
+      category: "pharmacist-care",
+      price: 6,
+      unit: "1 Sachet",
+      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+    },
+    {
+      id: "pharm-2",
+      name: "Savlon Antiseptic 250ml",
+      generic: "Chlorhexidine Gluconate",
+      company: "ACI Limited",
+      category: "pharmacist-care",
+      price: 95,
+      unit: "1 Bottle",
+      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+    },
   ];
 
   const filteredCategories = categories.filter(
     (cat) =>
       cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cat.bnName.includes(searchQuery)
+      cat.bnName.includes(searchQuery),
   );
 
   const quickNav = [
     { name: "Store", icon: <FaStore className="w-5 h-5 md:w-6 md:h-6" /> },
     { name: "Lab", icon: <FaFlask className="w-5 h-5 md:w-6 md:h-6" /> },
-    { name: "Doctor", icon: <FaStethoscope className="w-5 h-5 md:w-6 md:h-6" /> },
-    { name: "Consult", icon: <FaCommentMedical className="w-5 h-5 md:w-6 md:h-6" /> }
+    {
+      name: "Doctor",
+      icon: <FaStethoscope className="w-5 h-5 md:w-6 md:h-6" />,
+    },
+    {
+      name: "Consult",
+      icon: <FaCommentMedical className="w-5 h-5 md:w-6 md:h-6" />,
+    },
   ];
 
   const handleBookSubmit = (e) => {
@@ -117,32 +249,38 @@ export default function Home() {
   };
 
   return (
-    <div className="flex-1 flex flex-col pb-24 bg-white dark:bg-zinc-950 min-h-screen text-zinc-800 dark:text-zinc-100">
+    <div className="flex-1 flex flex-col pb-24 bg-gradient-to-b from-emerald-200 via-emerald-50 to-white bg-fixed dark:from-emerald-950/60 dark:via-zinc-950 dark:to-zinc-950 min-h-screen text-zinc-800 dark:text-zinc-100">
       {/* Top App Bar */}
-      <header className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md w-full top-0 sticky z-40 border-b border-emerald-100 dark:border-zinc-800 flex items-center justify-between px-4 md:px-6 py-3.5 transition-colors shadow-sm">
-        <div className="flex items-center gap-2">
-          <div className="bg-emerald-50 dark:bg-emerald-950/50 p-1.5 md:p-2 rounded-xl text-emerald-600 dark:text-emerald-400">
-            <MdMedicalServices size={22} className="md:w-[26px] md:h-[26px]" />
+      <header className="bg-emerald-50/60 dark:bg-emerald-950/60 backdrop-blur-md w-full top-0 sticky z-40 border-b border-emerald-100/40 dark:border-zinc-800/50 flex items-center justify-between px-3 md:px-6 py-2.5 transition-colors">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="bg-emerald-600 dark:bg-emerald-500 text-white w-9 h-9 md:w-11 md:h-11 rounded-xl flex items-center justify-center font-bold">
+            <span className="text-lg md:text-xl font-black leading-none">F</span>
           </div>
           <div>
-            <h1 className="font-headline-md text-base md:text-xl text-emerald-800 dark:text-emerald-400 font-bold tracking-tight">
-              Fuji Medical Hall
+            <h1 className="text-sm md:text-xl font-black text-emerald-800 dark:text-emerald-400 tracking-tight leading-none">
+              ফুজি মেডিকেল হল
             </h1>
-            <p className="text-[8px] md:text-[9px] text-emerald-600 dark:text-emerald-500 font-bold tracking-wider uppercase">
-              Wholesale Pharmacy & Clinic
+            <p className="text-[9px] md:text-xs font-bold text-emerald-600 dark:text-emerald-500 tracking-wide mt-1.5">
+              বিশ্বস্ত ঔষধ সেবায় ২৭ বছর
             </p>
           </div>
-          <span className="bg-emerald-600 text-white text-[8px] px-2 py-0.5 rounded-full font-bold uppercase ml-1.5 tracking-wider shadow-sm animate-pulse">
-            Wholesale
-          </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 md:gap-2">
+          <a
+            href="/login"
+            className="text-[10px] md:text-sm font-bold px-2.5 py-1.5 rounded-xl bg-emerald-600/10 hover:bg-emerald-600 hover:text-white text-emerald-800 dark:text-emerald-400 transition-all border border-emerald-250/20 dark:border-zinc-800/80"
+          >
+            Login / Sign Up
+          </a>
           <button
             onClick={() => setCartCount(cartCount + 1)}
             className="btn btn-ghost btn-circle btn-sm relative hover:bg-emerald-50 dark:hover:bg-emerald-950/30 group transition-all duration-300 text-emerald-800 dark:text-emerald-400"
           >
             <div className="indicator">
-              <MdShoppingCart size={20} className="md:w-[24px] md:h-[24px] group-hover:scale-110 transition-transform" />
+              <MdShoppingCart
+                size={20}
+                className="md:w-[24px] md:h-[24px] group-hover:scale-110 transition-transform"
+              />
               {cartCount > 0 && (
                 <span className="badge badge-sm badge-error indicator-item font-bold text-white scale-90">
                   {cartCount}
@@ -153,9 +291,9 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-container-max mx-auto w-full px-4 md:px-8">
+      <main className="max-w-container-max mx-auto w-full px-3 md:px-8">
         {/* Search Section */}
-        <section className="pt-4 md:pt-6">
+        <section className="py-3 md:py-6">
           <div className="relative group max-w-2xl mx-auto">
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-emerald-600 dark:text-emerald-500">
               <MdSearch size={20} />
@@ -164,7 +302,7 @@ export default function Home() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white dark:bg-zinc-900 border border-emerald-100 dark:border-zinc-800 rounded-2xl py-3 pl-12 pr-12 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 focus:outline-none transition-all shadow-sm hover:shadow-md text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 font-body-md text-sm md:text-base"
+              className="w-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-emerald-100/80 dark:border-zinc-800/80 rounded-2xl py-2.5 pl-12 pr-12 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 focus:outline-none transition-all text-zinc-850 dark:text-zinc-100 placeholder-zinc-400 font-body-md text-sm md:text-base"
               placeholder="Search medicines, categories, or services..."
             />
             {searchQuery && (
@@ -180,40 +318,13 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-        {/* Quick Service Navigation */}
-        <nav className="flex justify-start md:justify-center py-4 md:py-6 overflow-x-auto hide-scrollbar gap-3 md:gap-8 px-1 md:px-0">
-          {quickNav.map((item) => (
-            <div
-              key={item.name}
-              onClick={() => setActiveService(item.name)}
-              className="flex flex-col items-center gap-1 min-w-[64px] md:min-w-[76px] cursor-pointer group"
-            >
-              <div
-                className={`w-11 h-11 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center transition-all duration-300 shadow-sm group-hover:scale-105 group-hover:shadow-md ${activeService === item.name
-                  ? "bg-emerald-600 text-white shadow-emerald-600/20"
-                  : "bg-emerald-50 dark:bg-zinc-900 text-emerald-800 dark:text-emerald-400 group-hover:bg-emerald-100/50 dark:group-hover:bg-zinc-800"
-                  }`}
-              >
-                <div className="transition-transform duration-300 group-hover:rotate-6">
-                  {item.icon}
-                </div>
-              </div>
-              <span className={`font-label-md text-[11px] md:text-xs font-semibold transition-colors duration-300 ${activeService === item.name ? "text-emerald-700 dark:text-emerald-400 font-bold" : "text-zinc-600 dark:text-zinc-400"
-                }`}>
-                {item.name}
-              </span>
-            </div>
-          ))}
-        </nav>
-
         {/* Hero Carousel Section */}
-        <section className="relative overflow-hidden rounded-3xl h-44 md:h-72 shadow-lg group border border-emerald-50 dark:border-zinc-800">
+        <section className="relative overflow-hidden rounded-3xl h-44 md:h-72 group border border-emerald-100/40 dark:border-zinc-800/80">
           <div
             className="flex transition-transform duration-700 ease-in-out h-full"
             style={{
               transform: `translateX(-${currentSlide * 100}%)`,
-              width: `${carouselSlides.length * 100}%`
+              width: `${carouselSlides.length * 100}%`,
             }}
           >
             {carouselSlides.map((slide, idx) => (
@@ -226,10 +337,10 @@ export default function Home() {
                 <div className="absolute bottom-0 left-1/3 w-60 h-60 bg-black/10 rounded-full blur-2xl -ml-20 -mb-20"></div>
 
                 <div className="z-10 text-white max-w-[60%] md:max-w-[55%] flex flex-col items-start gap-1.5 md:gap-3">
-                  <span className="bg-white/20 text-white text-[9px] md:text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider backdrop-blur-sm">
+                  <span className="bg-white/20 text-white text-[8px] md:text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider backdrop-blur-sm">
                     Featured Service
                   </span>
-                  <h2 className="font-headline-lg text-base md:text-3xl font-extrabold tracking-tight leading-tight text-white drop-shadow-sm">
+                  <h2 className="font-headline-lg text-sm md:text-3xl font-extrabold tracking-tight leading-tight text-white drop-shadow-sm">
                     {slide.title}
                   </h2>
                   <p className="font-body-md text-xs md:text-sm opacity-90 leading-relaxed max-w-md hidden sm:block">
@@ -237,7 +348,7 @@ export default function Home() {
                   </p>
                   <button
                     onClick={slide.action}
-                    className="mt-1 md:mt-2 bg-white text-emerald-800 hover:bg-emerald-50 hover:scale-105 active:scale-95 px-3.5 py-1.5 md:px-5 md:py-2 rounded-xl font-bold text-[10px] md:text-xs shadow-md transition-all duration-300 flex items-center gap-1.5 group-hover:translate-x-1"
+                    className="mt-1 md:mt-2.5 bg-white text-emerald-800 hover:bg-emerald-50 hover:scale-[1.02] active:scale-[0.98] px-3.5 py-1.5 md:px-5 md:py-2 rounded-xl font-bold text-[10px] md:text-xs transition-all duration-300 flex items-center gap-1.5"
                   >
                     <span>{slide.btnText}</span>
                     <MdArrowForward size={12} className="md:w-3.5 md:h-3.5" />
@@ -261,92 +372,79 @@ export default function Home() {
               <button
                 key={idx}
                 onClick={() => setCurrentSlide(idx)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${currentSlide === idx ? "w-5 bg-white" : "w-1.5 bg-white/45 hover:bg-white/65"
-                  }`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  currentSlide === idx
+                    ? "w-5 bg-white"
+                    : "w-1.5 bg-white/45 hover:bg-white/65"
+                }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
             ))}
           </div>
         </section>
-
-        {/* Stats Section */}
-        <section className="py-5 grid grid-cols-3 gap-2 md:gap-6 text-center">
-          <div className="bg-emerald-50/40 dark:bg-zinc-900 p-2 md:p-5 rounded-2xl border border-emerald-100/50 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1.5 md:gap-3">
-            <div className="text-emerald-700 dark:text-emerald-400 bg-white dark:bg-zinc-800 p-1.5 rounded-xl shadow-sm">
-              <MdVerified size={18} className="md:w-6 md:h-6" />
-            </div>
-            <div className="text-center md:text-left">
-              <p className="font-bold text-[9px] md:text-base text-emerald-950 dark:text-emerald-300 leading-tight">100% Genuine</p>
-              <p className="text-[8px] md:text-xs text-zinc-500 dark:text-zinc-400 hidden xs:block font-medium">Quality Medicines</p>
-            </div>
-          </div>
-          <div className="bg-emerald-50/40 dark:bg-zinc-900 p-2 md:p-5 rounded-2xl border border-emerald-100/50 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1.5 md:gap-3">
-            <div className="text-emerald-700 dark:text-emerald-400 bg-white dark:bg-zinc-800 p-1.5 rounded-xl shadow-sm">
-              <MdLocalShipping size={18} className="md:w-6 md:h-6" />
-            </div>
-            <div className="text-center md:text-left">
-              <p className="font-bold text-[9px] md:text-base text-emerald-950 dark:text-emerald-300 leading-tight">Fast Delivery</p>
-              <p className="text-[8px] md:text-xs text-zinc-500 dark:text-zinc-400 hidden xs:block font-medium">To your doorstep</p>
-            </div>
-          </div>
-          <div className="bg-emerald-50/40 dark:bg-zinc-900 p-2 md:p-5 rounded-2xl border border-emerald-100/50 dark:border-zinc-800 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1.5 md:gap-3">
-            <div className="text-emerald-700 dark:text-emerald-400 bg-white dark:bg-zinc-800 p-1.5 rounded-xl shadow-sm">
-              <MdSupportAgent size={18} className="md:w-6 md:h-6" />
-            </div>
-            <div className="text-center md:text-left">
-              <p className="font-bold text-[9px] md:text-base text-emerald-950 dark:text-emerald-300 leading-tight">Expert Help</p>
-              <p className="text-[8px] md:text-xs text-zinc-500 dark:text-zinc-400 hidden xs:block font-medium">Certified Doctors</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Categories Section - FIXED TYPO IN TITLE COLOR */}
-        <section className="py-4">
-          <div className="flex justify-between items-center mb-4 font-sans">
+        {/* Categories Section */}
+        <section id="categories-section" className="py-4">
+          <div className="flex justify-between items-center mb-3 font-sans">
             <div>
               <h3 className="text-black font-extrabold text-xl md:text-2xl">
                 All You Need
               </h3>
-              <p className="text-[11px] md:text-xs text-zinc-600 dark:text-zinc-400 font-medium">Browse medicines by categories</p>
+              <p className="text-[11px] md:text-xs text-zinc-600 dark:text-zinc-400 font-medium">
+                Browse medicines by categories
+              </p>
             </div>
             <button
               onClick={() => setSelectedCategory(null)}
-              className="btn btn-ghost btn-xs md:btn-sm text-emerald-700 hover:bg-emerald-50 font-bold"
+              className="text-xs md:text-sm font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50/50 dark:hover:bg-zinc-900/50 transition-all"
             >
               View All
             </button>
           </div>
 
           {filteredCategories.length === 0 ? (
-            <div className="text-center py-12 bg-emerald-50/20 dark:bg-zinc-900 rounded-3xl border border-dashed border-emerald-200 dark:border-zinc-800">
-              <p className="font-bold text-zinc-500 text-sm">No categories match your search</p>
-              <button onClick={() => setSearchQuery("")} className="btn btn-link text-emerald-700 mt-2 btn-sm">Clear Search</button>
+            <div className="text-center py-12 bg-emerald-50/20 dark:bg-zinc-900 rounded-3xl border border-dashed border-emerald-250 dark:border-zinc-800">
+              <p className="font-bold text-zinc-500 text-sm">
+                No categories match your search
+              </p>
+              <button
+                onClick={() => setSearchQuery("")}
+                className="btn btn-link text-emerald-700 mt-2 btn-sm"
+              >
+                Clear Search
+              </button>
             </div>
           ) : (
-            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-6">
+            <div className="grid grid-cols-5 gap-2 md:gap-4 max-w-3xl mx-auto">
               {filteredCategories.map((cat) => (
                 <div
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`flex flex-col items-center text-center gap-1.5 cursor-pointer group transition-all duration-300 ${selectedCategory?.id === cat.id ? "scale-105" : ""
-                    }`}
+                  className={`flex flex-col items-center text-center gap-1 cursor-pointer group transition-all duration-300 ${
+                    selectedCategory?.id === cat.id ? "scale-105" : ""
+                  }`}
                 >
                   <div
-                    className={`aspect-square w-full rounded-2xl p-2.5 md:p-4 flex items-center justify-center transition-all duration-300 border shadow-sm group-hover:-translate-y-1 ${selectedCategory?.id === cat.id
-                      ? "bg-emerald-600 border-emerald-600 text-white shadow-emerald-600/20 scale-105"
-                      : "bg-white dark:bg-zinc-900 border-emerald-100/60 group-hover:bg-emerald-50 group-hover:border-emerald-600 group-hover:text-emerald-700 dark:border-zinc-800"
-                      }`}
+                    className={`aspect-square w-full max-w-[70px] rounded-xl md:rounded-2xl p-1.5 md:p-3 flex items-center justify-center transition-all duration-300 border ${
+                      selectedCategory?.id === cat.id
+                        ? "bg-emerald-600 border-emerald-600 text-white scale-105"
+                        : "bg-white dark:bg-zinc-900 border-emerald-100/60 group-hover:bg-emerald-50 group-hover:border-emerald-600 group-hover:text-emerald-700 dark:border-zinc-800"
+                    }`}
                   >
                     <div className="transition-all duration-300 group-hover:scale-110">
                       {cat.icon}
                     </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className={`font-label-md text-xs md:text-sm font-semibold transition-colors duration-300 leading-tight ${selectedCategory?.id === cat.id ? "text-emerald-700 dark:text-emerald-400 font-bold" : "text-zinc-700 dark:text-zinc-300 group-hover:text-emerald-700"
-                      }`}>
+                  <div className="flex flex-col mt-0.5">
+                    <span
+                      className={`font-label-md text-[9px] sm:text-[11px] md:text-xs font-bold transition-colors duration-300 leading-tight ${
+                        selectedCategory?.id === cat.id
+                          ? "text-emerald-700 dark:text-emerald-400 font-bold"
+                          : "text-zinc-700 dark:text-zinc-300 group-hover:text-emerald-700"
+                      }`}
+                    >
                       {cat.name}
                     </span>
-                    <span className="text-caption text-[10px] md:text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 font-medium">
+                    <span className="text-caption text-[8px] sm:text-[9px] md:text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">
                       ({cat.bnName})
                     </span>
                   </div>
@@ -355,81 +453,123 @@ export default function Home() {
             </div>
           )}
         </section>
-
-        {/* Selected Category Details/Products Area */}
-        {selectedCategory && (
-          <section className="mt-6 p-4 md:p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-emerald-100/60 dark:border-zinc-800 shadow-md animate-fadeIn">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-zinc-800 p-2 rounded-xl">
-                  {selectedCategory.icon}
-                </div>
-                <div>
-                  <h4 className="font-bold text-base md:text-lg text-emerald-900 dark:text-emerald-300">{selectedCategory.name} Products</h4>
-                  <p className="text-[10px] md:text-xs text-zinc-500 dark:text-zinc-400">Recommended items under {selectedCategory.name}</p>
-                </div>
-              </div>
+        {/* Products Section */}
+        <section id="products-section" className="py-6 border-t border-emerald-50 dark:border-zinc-900 mt-4">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-black font-extrabold text-xl md:text-2xl">
+                {selectedCategory ? `${selectedCategory.name} Products` : "All Products"}
+              </h3>
+              <p className="text-[11px] md:text-xs text-zinc-600 dark:text-zinc-400 font-medium">
+                {selectedCategory ? `Showing products in ${selectedCategory.name}` : "Browse all available medicines"}
+              </p>
+            </div>
+            {selectedCategory && (
               <button
                 onClick={() => setSelectedCategory(null)}
-                className="btn btn-xs md:btn-sm btn-circle btn-ghost"
+                className="btn btn-ghost btn-xs text-emerald-700 hover:bg-emerald-50 font-bold"
               >
-                <MdClose size={18} />
+                Clear Filter
               </button>
-            </div>
+            )}
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-emerald-50/50 dark:border-zinc-800 flex items-center justify-between hover:shadow-sm hover:border-emerald-200 transition-all">
-                  <div className="flex items-center gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+            {(selectedCategory
+              ? products.filter((p) => p.category === selectedCategory.id)
+              : products
+            ).map((product) => (
+              <div
+                key={product.id}
+                className="p-3 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm rounded-2xl border border-emerald-100/40 dark:border-zinc-800 flex flex-col justify-between hover:border-emerald-400 transition-all duration-300 group hover:-translate-y-0.5"
+              >
+                <div className="flex flex-col gap-1.5">
+                  <div className="relative aspect-square w-full rounded-xl bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center overflow-hidden border border-emerald-50/30">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      className="w-12 h-12 object-cover rounded-xl shadow-sm border border-emerald-50/30"
-                      src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=100&auto=format&fit=crop&q=80"
-                      alt={`Medicine pack`}
+                      className="w-[75%] h-[75%] object-contain transition-transform duration-300 group-hover:scale-105"
+                      src={product.image}
+                      alt={product.name}
                     />
-                    <div>
-                      <p className="font-bold text-xs md:text-sm text-zinc-800 dark:text-zinc-200">Medicine {selectedCategory.name} {item}00mg</p>
-                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Pack of 10 | Wholesale</p>
-                      <p className="text-xs md:text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">৳{(item * 45).toFixed(2)}</p>
-                    </div>
+                    <span className="absolute top-1.5 right-1.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[8px] md:text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                      {product.category}
+                    </span>
+                  </div>
+                  <div className="mt-1">
+                    <p className="font-bold text-xs md:text-sm text-zinc-800 dark:text-zinc-100 leading-tight truncate">
+                      {product.name}
+                    </p>
+                    <p className="text-[9px] md:text-[10px] text-zinc-400 dark:text-zinc-500 font-medium truncate">
+                      {product.generic}
+                    </p>
+                    <p className="text-[8px] text-zinc-400 dark:text-zinc-600 truncate">
+                      {product.company}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                  <div>
+                    <span className="text-[8px] md:text-[9px] text-zinc-400 block">{product.unit}</span>
+                    <span className="text-xs md:text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
+                      ৳{product.price.toFixed(2)}
+                    </span>
                   </div>
                   <button
                     onClick={() => setCartCount(cartCount + 1)}
-                    className="btn btn-xs bg-emerald-600 text-white hover:bg-emerald-700 border-none rounded-xl"
+                    className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-[10px] md:text-xs font-extrabold px-3.5 py-1.5 rounded-xl transition-all"
                   >
                     Add
                   </button>
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
+              </div>
+            ))}
+          </div>
+        </section>
       </main>
 
       {/* Book Lab Test Modal */}
       {isBookModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl max-w-md w-full p-5 md:p-6 shadow-2xl animate-scaleUp border border-emerald-50/50 dark:border-zinc-800">
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl max-w-md w-full p-5 md:p-6 shadow-xl border border-emerald-100/30 dark:border-zinc-800 animate-scaleUp">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-lg md:text-xl text-zinc-800 dark:text-zinc-100 flex items-center gap-2">
                 <FaFlask className="text-emerald-600" />
                 Book a Home Lab Test
               </h3>
-              <button onClick={() => setIsBookModalOpen(false)} className="btn btn-sm btn-circle btn-ghost">
+              <button
+                onClick={() => setIsBookModalOpen(false)}
+                className="btn btn-sm btn-circle btn-ghost"
+              >
                 <MdClose size={20} />
               </button>
             </div>
             <form onSubmit={handleBookSubmit} className="space-y-3.5">
               <div>
-                <label className="label text-xs font-bold text-zinc-500 py-1">Full Name</label>
-                <input required type="text" className="input input-bordered w-full rounded-xl bg-zinc-50 dark:bg-zinc-800 border-emerald-100 dark:border-zinc-700 h-10 text-sm" placeholder="Enter your name" />
+                <label className="label text-xs font-bold text-zinc-500 py-1">
+                  Full Name
+                </label>
+                <input
+                  required
+                  type="text"
+                  className="input input-bordered w-full rounded-xl bg-zinc-50 dark:bg-zinc-800 border-emerald-100 dark:border-zinc-700 h-10 text-sm"
+                  placeholder="Enter your name"
+                />
               </div>
               <div>
-                <label className="label text-xs font-bold text-zinc-500 py-1">Phone Number</label>
-                <input required type="tel" className="input input-bordered w-full rounded-xl bg-zinc-50 dark:bg-zinc-800 border-emerald-100 dark:border-zinc-700 h-10 text-sm" placeholder="Enter phone number" />
+                <label className="label text-xs font-bold text-zinc-500 py-1">
+                  Phone Number
+                </label>
+                <input
+                  required
+                  type="tel"
+                  className="input input-bordered w-full rounded-xl bg-zinc-50 dark:bg-zinc-800 border-emerald-100 dark:border-zinc-700 h-10 text-sm"
+                  placeholder="Enter phone number"
+                />
               </div>
               <div>
-                <label className="label text-xs font-bold text-zinc-500 py-1">Select Test Package</label>
+                <label className="label text-xs font-bold text-zinc-500 py-1">
+                  Select Test Package
+                </label>
                 <select className="select select-bordered w-full rounded-xl bg-zinc-50 dark:bg-zinc-800 border-emerald-100 dark:border-zinc-700 h-10 text-sm">
                   <option>Complete Blood Count (CBC)</option>
                   <option>Diabetes Screening (HbA1c)</option>
@@ -438,7 +578,10 @@ export default function Home() {
                   <option>Full Body Checkup (Premium)</option>
                 </select>
               </div>
-              <button type="submit" className="btn bg-emerald-600 text-white hover:bg-emerald-700 border-none w-full rounded-xl mt-3 h-10">
+              <button
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl mt-3.5 py-2.5 transition-all text-sm"
+              >
                 Confirm Booking Request
               </button>
             </form>
@@ -447,30 +590,50 @@ export default function Home() {
       )}
 
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-1.5 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-emerald-50 dark:border-zinc-900 shadow-lg z-50 rounded-t-2xl">
+      <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-1.5 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-t border-emerald-100/30 dark:border-zinc-900 z-50 rounded-t-2xl">
         {[
           { name: "home", label: "Home", icon: <MdHome size={22} /> },
-          { name: "orders", label: "Orders", icon: <MdReceiptLong size={22} /> },
-          { name: "categories", label: "Categories", icon: <MdGridView size={22} /> },
+          {
+            name: "orders",
+            label: "Orders",
+            icon: <MdReceiptLong size={22} />,
+          },
+          {
+            name: "categories",
+            label: "Categories",
+            icon: <MdGridView size={22} />,
+          },
           { name: "inbox", label: "Inbox", icon: <MdMail size={22} /> },
-          { name: "more", label: "More", icon: <MdMenu size={22} /> }
+          { name: "more", label: "More", icon: <MdMenu size={22} /> },
         ].map((tab) => (
           <button
             key={tab.name}
             onClick={() => {
               setActiveTab(tab.name);
-              if (tab.name === "categories") {
+              if (tab.name === "home") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              } else if (tab.name === "categories") {
                 const element = document.getElementById("categories-section");
                 element?.scrollIntoView({ behavior: "smooth" });
+              } else if (tab.name === "orders") {
+                const element = document.getElementById("products-section");
+                element?.scrollIntoView({ behavior: "smooth" });
+              } else if (tab.name === "inbox") {
+                alert("ফুজি কাস্টমার কেয়ার লাইভ চ্যাট ওপেন হচ্ছে... কাস্টমার কেয়ার প্রতিনিধি ১ মিনিটের মধ্যে আপনার সাথে যুক্ত হবেন!");
+              } else if (tab.name === "more") {
+                alert("প্রোফাইল সেটিংস এবং অন্যান্য অপশন শীঘ্রই আসছে!");
               }
             }}
-            className={`flex flex-col items-center justify-center p-1.5 rounded-xl transition-all duration-300 min-w-[56px] ${activeTab === tab.name
-              ? "bg-emerald-600 text-white scale-105 shadow-md shadow-emerald-600/20"
-              : "text-emerald-800 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-zinc-900"
-              }`}
+            className={`flex flex-col items-center justify-center p-1.5 rounded-xl transition-all duration-300 min-w-[56px] ${
+              activeTab === tab.name
+                ? "bg-emerald-600/10 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-350 scale-105 font-bold"
+                : "text-emerald-800/80 dark:text-emerald-400/80 hover:text-emerald-900 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-zinc-900/50"
+            }`}
           >
             {tab.icon}
-            <span className="font-label-md text-[9px] font-semibold mt-0.5">{tab.label}</span>
+            <span className="font-label-md text-[9px] font-semibold mt-0.5">
+              {tab.label}
+            </span>
           </button>
         ))}
       </nav>
