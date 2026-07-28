@@ -13,6 +13,7 @@ import {
 } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import { FaHeartbeat, FaCheckCircle } from "react-icons/fa";
+import { signIn, signUp } from "@/lib/auth-client";
 
 function getPasswordStrength(pwd) {
   let score = 0;
@@ -43,7 +44,7 @@ export default function SignUpPage() {
 
   const passwordStrength = getPasswordStrength(password);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -61,24 +62,39 @@ export default function SignUpPage() {
     }
 
     setIsLoading(true);
-    console.log("Signing up with:", { name, phone, email, password });
-
-    setTimeout(() => {
+    try {
+      const result = await signUp.email({
+        name,
+        email,
+        password,
+        callbackURL: "/",
+        phone,
+      });
+      if (result?.error) {
+        setError(result.error.message || "Registration failed. Please try again.");
+        setIsLoading(false);
+      } else {
+        setSuccess(true);
+        setTimeout(() => router.push("/"), 1500);
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
       setIsLoading(false);
-      setSuccess(true);
-      setTimeout(() => {
-        router.push("/");
-      }, 1500);
-    }, 500);
+    }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     setError("");
-    console.log("Google sign up clicked");
-    setTimeout(() => {
+    try {
+      await signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+    } catch {
+      setError("Google sign-in failed. Please check your environment variables.");
       setIsGoogleLoading(false);
-    }, 500);
+    }
   };
 
   if (success) {

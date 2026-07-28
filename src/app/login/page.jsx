@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { MdEmail, MdLock, MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import { FaHeartbeat } from "react-icons/fa";
+import { signIn } from "@/lib/auth-client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,24 +18,41 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    console.log("Logging in with:", { email, password, rememberMe });
-    setTimeout(() => {
+    try {
+      const result = await signIn.email({
+        email,
+        password,
+        callbackURL: "/",
+      });
+      if (result?.error) {
+        setError(result.error.message || "Invalid email or password.");
+        setIsLoading(false);
+      } else {
+        router.push("/");
+        router.refresh();
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
       setIsLoading(false);
-      router.push("/");
-    }, 500);
+    }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     setError("");
-    console.log("Google sign in clicked");
-    setTimeout(() => {
+    try {
+      await signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+    } catch {
+      setError("Google sign-in failed. Please check your environment variables.");
       setIsGoogleLoading(false);
-    }, 500);
+    }
   };
 
   return (
