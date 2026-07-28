@@ -39,6 +39,8 @@ import {
   FaHandHoldingMedical,
   FaBrain,
 } from "react-icons/fa";
+import { Button } from "@heroui/react";
+import Link from "next/link";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("home");
@@ -92,31 +94,41 @@ export default function Home() {
       id: "cardiac",
       name: "Cardiac",
       bnName: "হৃদরোগ",
-      icon: <FaHeartbeat className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />,
+      icon: (
+        <FaHeartbeat className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />
+      ),
     },
     {
       id: "arthropathy",
       name: "Arthropathy",
       bnName: "বাতের ব্যথা",
-      icon: <FaUserInjured className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />,
+      icon: (
+        <FaUserInjured className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />
+      ),
     },
     {
       id: "neurocare",
       name: "Neurocare",
       bnName: "স্নায়ু যত্ন",
-      icon: <FaBrain className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />,
+      icon: (
+        <FaBrain className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />
+      ),
     },
     {
       id: "cold-flu",
       name: "Cold & Flu",
       bnName: "ঠান্ডা ও ফ্লু",
-      icon: <MdDeviceThermostat className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />,
+      icon: (
+        <MdDeviceThermostat className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />
+      ),
     },
     {
       id: "pharmacist-care",
       name: "Pharmacist Care",
       bnName: "ফার্মাসিস্ট সেবা",
-      icon: <FaHandHoldingMedical className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />,
+      icon: (
+        <FaHandHoldingMedical className="w-5 h-5 md:w-8 md:h-8 text-emerald-600 dark:text-emerald-400 group-hover:text-white" />
+      ),
     },
   ];
 
@@ -129,7 +141,8 @@ export default function Home() {
       category: "cardiac",
       price: 60,
       unit: "10 Tablets (Strip)",
-      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+      image:
+        "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
     },
     {
       id: "card-2",
@@ -139,7 +152,8 @@ export default function Home() {
       category: "cardiac",
       price: 40,
       unit: "10 Tablets (Strip)",
-      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+      image:
+        "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
     },
     {
       id: "arth-1",
@@ -149,7 +163,8 @@ export default function Home() {
       category: "arthropathy",
       price: 80,
       unit: "10 Tablets (Strip)",
-      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+      image:
+        "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
     },
     {
       id: "arth-2",
@@ -159,7 +174,8 @@ export default function Home() {
       category: "arthropathy",
       price: 150,
       unit: "10 Capsules (Strip)",
-      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+      image:
+        "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
     },
     {
       id: "neuro-1",
@@ -169,7 +185,8 @@ export default function Home() {
       category: "neurocare",
       price: 70,
       unit: "10 Tablets (Strip)",
-      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+      image:
+        "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
     },
     {
       id: "neuro-2",
@@ -179,7 +196,8 @@ export default function Home() {
       category: "neurocare",
       price: 120,
       unit: "10 Capsules (Strip)",
-      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+      image:
+        "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
     },
     {
       id: "cold-1",
@@ -189,7 +207,8 @@ export default function Home() {
       category: "cold-flu",
       price: 18,
       unit: "12 Tablets (Strip)",
-      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+      image:
+        "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
     },
     {
       id: "cold-2",
@@ -199,7 +218,8 @@ export default function Home() {
       category: "cold-flu",
       price: 80,
       unit: "10 Tablets (Strip)",
-      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+      image:
+        "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
     },
     {
       id: "pharm-1",
@@ -209,7 +229,8 @@ export default function Home() {
       category: "pharmacist-care",
       price: 6,
       unit: "1 Sachet",
-      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+      image:
+        "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
     },
     {
       id: "pharm-2",
@@ -219,7 +240,8 @@ export default function Home() {
       category: "pharmacist-care",
       price: 95,
       unit: "1 Bottle",
-      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
+      image:
+        "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&auto=format&fit=crop&q=80",
     },
   ];
 
@@ -249,48 +271,8 @@ export default function Home() {
   };
 
   return (
-    <div className="flex-1 flex flex-col pb-24 bg-gradient-to-b from-emerald-200 via-emerald-50 to-white bg-fixed dark:from-emerald-950/60 dark:via-zinc-950 dark:to-zinc-950 min-h-screen text-zinc-800 dark:text-zinc-100">
+    <div className="flex-1 flex flex-col pb-24 min-h-screen text-zinc-800 dark:text-zinc-100">
       {/* Top App Bar */}
-      <header className="bg-emerald-50/60 dark:bg-emerald-950/60 backdrop-blur-md w-full top-0 sticky z-40 border-b border-emerald-100/40 dark:border-zinc-800/50 flex items-center justify-between px-3 md:px-6 py-2.5 transition-colors">
-        <div className="flex items-center gap-2 md:gap-3">
-          <div className="bg-emerald-600 dark:bg-emerald-500 text-white w-9 h-9 md:w-11 md:h-11 rounded-xl flex items-center justify-center font-bold">
-            <span className="text-lg md:text-xl font-black leading-none">F</span>
-          </div>
-          <div>
-            <h1 className="text-sm md:text-xl font-black text-emerald-800 dark:text-emerald-400 tracking-tight leading-none">
-              ফুজি মেডিকেল হল
-            </h1>
-            <p className="text-[9px] md:text-xs font-bold text-emerald-600 dark:text-emerald-500 tracking-wide mt-1.5">
-              বিশ্বস্ত ঔষধ সেবায় ২৭ বছর
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 md:gap-2">
-          <a
-            href="/login"
-            className="text-[10px] md:text-sm font-bold px-2.5 py-1.5 rounded-xl bg-emerald-600/10 hover:bg-emerald-600 hover:text-white text-emerald-800 dark:text-emerald-400 transition-all border border-emerald-250/20 dark:border-zinc-800/80"
-          >
-            Login / Sign Up
-          </a>
-          <button
-            onClick={() => setCartCount(cartCount + 1)}
-            className="btn btn-ghost btn-circle btn-sm relative hover:bg-emerald-50 dark:hover:bg-emerald-950/30 group transition-all duration-300 text-emerald-800 dark:text-emerald-400"
-          >
-            <div className="indicator">
-              <MdShoppingCart
-                size={20}
-                className="md:w-[24px] md:h-[24px] group-hover:scale-110 transition-transform"
-              />
-              {cartCount > 0 && (
-                <span className="badge badge-sm badge-error indicator-item font-bold text-white scale-90">
-                  {cartCount}
-                </span>
-              )}
-            </div>
-          </button>
-        </div>
-      </header>
-
       <main className="max-w-container-max mx-auto w-full px-3 md:px-8">
         {/* Search Section */}
         <section className="py-3 md:py-6">
@@ -372,11 +354,10 @@ export default function Home() {
               <button
                 key={idx}
                 onClick={() => setCurrentSlide(idx)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  currentSlide === idx
-                    ? "w-5 bg-white"
-                    : "w-1.5 bg-white/45 hover:bg-white/65"
-                }`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${currentSlide === idx
+                  ? "w-5 bg-white"
+                  : "w-1.5 bg-white/45 hover:bg-white/65"
+                  }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
             ))}
@@ -419,16 +400,14 @@ export default function Home() {
                 <div
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`flex flex-col items-center text-center gap-1 cursor-pointer group transition-all duration-300 ${
-                    selectedCategory?.id === cat.id ? "scale-105" : ""
-                  }`}
+                  className={`flex flex-col items-center text-center gap-1 cursor-pointer group transition-all duration-300 ${selectedCategory?.id === cat.id ? "scale-105" : ""
+                    }`}
                 >
                   <div
-                    className={`aspect-square w-full max-w-[70px] rounded-xl md:rounded-2xl p-1.5 md:p-3 flex items-center justify-center transition-all duration-300 border ${
-                      selectedCategory?.id === cat.id
-                        ? "bg-emerald-600 border-emerald-600 text-white scale-105"
-                        : "bg-white dark:bg-zinc-900 border-emerald-100/60 group-hover:bg-emerald-50 group-hover:border-emerald-600 group-hover:text-emerald-700 dark:border-zinc-800"
-                    }`}
+                    className={`aspect-square w-full max-w-[70px] rounded-xl md:rounded-2xl p-1.5 md:p-3 flex items-center justify-center transition-all duration-300 border ${selectedCategory?.id === cat.id
+                      ? "bg-emerald-600 border-emerald-600 text-white scale-105"
+                      : "bg-white dark:bg-zinc-900 border-emerald-100/60 group-hover:bg-emerald-50 group-hover:border-emerald-600 group-hover:text-emerald-700 dark:border-zinc-800"
+                      }`}
                   >
                     <div className="transition-all duration-300 group-hover:scale-110">
                       {cat.icon}
@@ -436,11 +415,10 @@ export default function Home() {
                   </div>
                   <div className="flex flex-col mt-0.5">
                     <span
-                      className={`font-label-md text-[9px] sm:text-[11px] md:text-xs font-bold transition-colors duration-300 leading-tight ${
-                        selectedCategory?.id === cat.id
-                          ? "text-emerald-700 dark:text-emerald-400 font-bold"
-                          : "text-zinc-700 dark:text-zinc-300 group-hover:text-emerald-700"
-                      }`}
+                      className={`font-label-md text-[9px] sm:text-[11px] md:text-xs font-bold transition-colors duration-300 leading-tight ${selectedCategory?.id === cat.id
+                        ? "text-emerald-700 dark:text-emerald-400 font-bold"
+                        : "text-zinc-700 dark:text-zinc-300 group-hover:text-emerald-700"
+                        }`}
                     >
                       {cat.name}
                     </span>
@@ -454,14 +432,21 @@ export default function Home() {
           )}
         </section>
         {/* Products Section */}
-        <section id="products-section" className="py-6 border-t border-emerald-50 dark:border-zinc-900 mt-4">
+        <section
+          id="products-section"
+          className="py-6 border-t border-emerald-50 dark:border-zinc-900 mt-4"
+        >
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-black font-extrabold text-xl md:text-2xl">
-                {selectedCategory ? `${selectedCategory.name} Products` : "All Products"}
+                {selectedCategory
+                  ? `${selectedCategory.name} Products`
+                  : "All Products"}
               </h3>
               <p className="text-[11px] md:text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-                {selectedCategory ? `Showing products in ${selectedCategory.name}` : "Browse all available medicines"}
+                {selectedCategory
+                  ? `Showing products in ${selectedCategory.name}`
+                  : "Browse all available medicines"}
               </p>
             </div>
             {selectedCategory && (
@@ -509,7 +494,9 @@ export default function Home() {
                 </div>
                 <div className="flex items-center justify-between mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                   <div>
-                    <span className="text-[8px] md:text-[9px] text-zinc-400 block">{product.unit}</span>
+                    <span className="text-[8px] md:text-[9px] text-zinc-400 block">
+                      {product.unit}
+                    </span>
                     <span className="text-xs md:text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
                       ৳{product.price.toFixed(2)}
                     </span>
@@ -619,16 +606,17 @@ export default function Home() {
                 const element = document.getElementById("products-section");
                 element?.scrollIntoView({ behavior: "smooth" });
               } else if (tab.name === "inbox") {
-                alert("ফুজি কাস্টমার কেয়ার লাইভ চ্যাট ওপেন হচ্ছে... কাস্টমার কেয়ার প্রতিনিধি ১ মিনিটের মধ্যে আপনার সাথে যুক্ত হবেন!");
+                alert(
+                  "ফুজি কাস্টমার কেয়ার লাইভ চ্যাট ওপেন হচ্ছে... কাস্টমার কেয়ার প্রতিনিধি ১ মিনিটের মধ্যে আপনার সাথে যুক্ত হবেন!",
+                );
               } else if (tab.name === "more") {
                 alert("প্রোফাইল সেটিংস এবং অন্যান্য অপশন শীঘ্রই আসছে!");
               }
             }}
-            className={`flex flex-col items-center justify-center p-1.5 rounded-xl transition-all duration-300 min-w-[56px] ${
-              activeTab === tab.name
-                ? "bg-emerald-600/10 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-350 scale-105 font-bold"
-                : "text-emerald-800/80 dark:text-emerald-400/80 hover:text-emerald-900 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-zinc-900/50"
-            }`}
+            className={`flex flex-col items-center justify-center p-1.5 rounded-xl transition-all duration-300 min-w-[56px] ${activeTab === tab.name
+              ? "bg-emerald-600/10 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-350 scale-105 font-bold"
+              : "text-emerald-800/80 dark:text-emerald-400/80 hover:text-emerald-900 dark:hover:text-emerald-300 hover:bg-emerald-50/50 dark:hover:bg-zinc-900/50"
+              }`}
           >
             {tab.icon}
             <span className="font-label-md text-[9px] font-semibold mt-0.5">

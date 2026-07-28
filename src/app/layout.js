@@ -1,18 +1,23 @@
+import Navbar from "@/component/Navbar";
 import "./globals.css";
+import Footer from "@/component/Footer";
 
 export const metadata = {
   title: "Fuji Medical Hall - Home",
-  description: "Your safe and reliable healthcare partner. Book home lab tests and purchase wholesale medicines.",
+  description:
+    "Your safe and reliable healthcare partner. Book home lab tests and purchase wholesale medicines.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="h-full antialiased light">
       <body
-        className="min-h-full flex flex-col bg-background text-on-background"
+        className="min-h-full flex flex-col bg-gradient-to-b from-emerald-200 via-emerald-50 to-white bg-fixed dark:from-emerald-950/60 dark:via-zinc-950 dark:to-zinc-950 text-zinc-800 dark:text-zinc-100"
         suppressHydrationWarning={true}
       >
+        <Navbar />
         {children}
+        <Footer />
       </body>
     </html>
   );
