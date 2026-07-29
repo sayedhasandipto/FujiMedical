@@ -71,13 +71,22 @@ export default function Navbar() {
                 <img
                   src={user.image}
                   alt={user.name || "User"}
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "flex";
+                  }}
                   className="w-7 h-7 md:w-8 md:h-8 rounded-full object-cover shadow-sm"
                 />
-              ) : (
-                <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black flex items-center justify-center text-xs md:text-sm shadow-sm uppercase">
-                  {user.name?.[0] || user.email?.[0] || "U"}
-                </div>
-              )}
+              ) : null}
+              <div
+                style={{ display: user.image ? "none" : "flex" }}
+                className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black items-center justify-center text-xs md:text-sm shadow-sm uppercase"
+              >
+                {user.name
+                  ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2)
+                  : user.email?.[0] || "U"}
+              </div>
               <span className="text-xs font-extrabold text-emerald-950 max-w-[100px] truncate hidden sm:inline-block">
                 {user.name?.split(" ")[0] || "Account"}
               </span>
@@ -97,13 +106,22 @@ export default function Navbar() {
                     <img
                       src={user.image}
                       alt={user.name || "User"}
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
+                      }}
                       className="w-10 h-10 rounded-full object-cover border border-emerald-300 shrink-0 shadow-sm"
                     />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-extrabold flex items-center justify-center text-base shrink-0 uppercase shadow-sm">
-                      {user.name?.[0] || user.email?.[0] || "U"}
-                    </div>
-                  )}
+                  ) : null}
+                  <div
+                    style={{ display: user.image ? "none" : "flex" }}
+                    className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-extrabold items-center justify-center text-base shrink-0 uppercase shadow-sm"
+                  >
+                    {user.name
+                      ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2)
+                      : user.email?.[0] || "U"}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1">
                       <h4 className="text-xs font-black text-slate-900 truncate leading-snug">

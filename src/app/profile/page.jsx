@@ -133,13 +133,23 @@ export default function ProfilePage() {
               <img
                 src={user.image}
                 alt={user.name || "Profile Avatar"}
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                  e.target.nextSibling.style.display = "flex";
+                }}
                 className="w-24 h-24 rounded-full object-cover border-4 border-emerald-500 shadow-md shrink-0"
               />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-3xl flex items-center justify-center border-4 border-emerald-400 shadow-md uppercase shrink-0">
-                {user.name?.[0] || user.email?.[0] || "U"}
-              </div>
-            )}
+            ) : null}
+            <div
+              style={{ display: user.image ? "none" : "flex" }}
+              className="w-24 h-24 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-3xl items-center justify-center border-4 border-emerald-400 shadow-md uppercase shrink-0"
+            >
+              {(user.name
+                ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2)
+                : user.email?.[0] || "U"
+              )}
+            </div>
 
             {/* Info */}
             <div className="flex-1 text-center sm:text-left space-y-2">
