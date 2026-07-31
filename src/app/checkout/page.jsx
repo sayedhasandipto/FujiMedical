@@ -16,11 +16,14 @@ import {
   MdNoteAlt,
   MdPayments,
 } from "react-icons/md";
+import { useSession } from "@/lib/auth-client";
 import Link from "next/link";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, subtotal, clearCart, isMounted } = useCart();
+  const { data: session } = useSession();
+  const user = session?.user;
 
   const [form, setForm] = useState({
     customerName: "",
@@ -64,6 +67,8 @@ export default function CheckoutPage() {
       shippingFee,
       totalAmount,
       paymentMethod: "Cash on Delivery (COD)",
+      email: user?.email || "",
+      userId: user?.id || "",
     };
 
     const res = await createOrder(orderPayload);

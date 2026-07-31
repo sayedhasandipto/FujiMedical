@@ -19,7 +19,16 @@ export async function GET(req) {
       .sort({ createdAt: -1 })
       .toArray();
 
-    return NextResponse.json({ orders: all });
+    // Normalize: some docs use 'orderStatus', others use 'status'
+    const normalized = all.map((o) => ({
+      ...o,
+      _id: o._id.toString(),
+      createdAt: o.createdAt ? o.createdAt.toISOString() : null,
+      status: o.status || o.orderStatus || "Pending",
+      total: o.totalAmount || o.total || o.grandTotal || 0,
+    }));
+
+    return NextResponse.json({ orders: normalized });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -63,6 +72,7 @@ export async function PATCH(req) {
       {
         $set: {
           status,
+          orderStatus: status, // keep both fields in sync
           updatedAt: new Date(),
         },
       }

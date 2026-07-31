@@ -20,6 +20,7 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import { FaHeartbeat } from "react-icons/fa";
 import { useSession, signOut, authClient } from "@/lib/auth-client";
+import { getUserOrders } from "@/app/actions/orderActions";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -33,10 +34,27 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+
   // Populate phone & address from session when available
   React.useEffect(() => {
     if (user?.phone) setPhone(user.phone);
     if (user?.address) setAddress(user.address);
+  }, [user]);
+
+  React.useEffect(() => {
+    async function loadOrders() {
+      if (user?.email) {
+        setLoadingOrders(true);
+        const res = await getUserOrders(user.email);
+        if (res.success) {
+          setOrders(res.data);
+        }
+        setLoadingOrders(false);
+      }
+    }
+    loadOrders();
   }, [user]);
 
   const handleSignOut = async () => {
@@ -192,7 +210,9 @@ export default function ProfilePage() {
             </div>
             <div>
               <p className="text-xs font-bold text-slate-400">Total Orders</p>
-              <h3 className="text-xl font-black text-slate-800 mt-0.5">0 Orders</h3>
+              <h3 className="text-xl font-black text-slate-800 mt-0.5">
+                {loadingOrders ? "..." : `${orders.length} Order${orders.length !== 1 ? "s" : ""}`}
+              </h3>
             </div>
           </div>
 
@@ -320,6 +340,149 @@ export default function ProfilePage() {
               </div>
             )}
           </form>
+        </div>
+
+        {/* My Orders Section */}
+        <div id="orders" className="bg-white border border-emerald-100/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+          <div>
+            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <MdShoppingBag className="text-emerald-600" /> My Orders
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Track your shipping progress and order status
+            </p>
+          </div>
+
+          {loadingOrders ? (
+            <div className="py-12 text-center text-zinc-400 space-y-3">
+              <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs font-semibold">Retrieving your order history...</p>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="text-center py-10 bg-slate-50 dark:bg-zinc-900 rounded-2xl border border-dashed border-emerald-100 flex flex-col items-center gap-2">
+              <MdShoppingBag className="text-slate-350 w-10 h-10" />
+              <p className="font-extrabold text-slate-600 text-xs">No orders found</p>
+              <p className="text-[11px] text-slate-400">You haven't placed any orders yet.</p>
+              <Link
+                href="/"
+                className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+              >
+                Start Shopping
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-6 divide-y divide-slate-100 pr-1">
+              {orders.map((order) => {
+                const steps = ["Pending", "Processing", "Shipped", "Delivered"];
+                const getStatusStep = (status) => {
+                  const s = status ? status.toLowerCase() : "";
+                  if (s === "processing") return 1;
+                  if (s === "shipped") return 2;
+                  if (s === "delivered") return 3;
+                  return 0;
+                };
+                const currentStep = getStatusStep(order.orderStatus);
+
+                return (
+                  <div key={order._id} className="pt-6 first:pt-0 space-y-4">
+                    {/* Order Details Header */}
+                    <div className="flex flex-col sm:flex-row justify-between gap-3 text-xs sm:items-center bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Order ID</span>
+                        <span className="font-mono font-black text-slate-900">{order.orderId}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Date</span>
+                        <span className="font-extrabold text-slate-800">
+                          {order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }) : "N/A"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Shipping Address</span>
+                        <span className="font-bold text-slate-700 truncate max-w-[200px] block">{order.address}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Payment</span>
+                        <span className="font-extrabold text-slate-800">{order.paymentMethod}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Total</span>
+                        <span className="font-black text-emerald-600">৳{Number(order.totalAmount || 0).toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    {/* Ordered items listing */}
+                    <div className="space-y-3 pl-2">
+                      {order.items && order.items.map((item, itemIdx) => {
+                        const imageSrc = item.image || `https://placehold.co/80x85/10b981/ffffff?text=${encodeURIComponent(item.name || "Item")}`;
+                        return (
+                          <div key={itemIdx} className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-3 min-w-0 pr-2">
+                              <img
+                                src={imageSrc}
+                                alt={item.name}
+                                className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-50"
+                              />
+                              <div className="min-w-0">
+                                <p className="font-extrabold text-slate-800 truncate">{item.name}</p>
+                                <p className="text-[10px] text-slate-400">
+                                  Qty: {item.quantity} x ৳{Number(item.price || 0).toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="font-black text-slate-900 shrink-0">
+                              ৳{Number(item.total || 0).toFixed(2)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Order Progress Stepper Bar */}
+                    <div className="pt-2 pb-4 px-2">
+                      <div className="flex items-center justify-between w-full relative">
+                        {/* Stepper bar background lines */}
+                        <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-100 -translate-y-1/2 z-0" />
+                        <div
+                          className="absolute top-1/2 left-0 h-1 bg-emerald-500 -translate-y-1/2 z-0 transition-all duration-500"
+                          style={{ width: `${(currentStep / 3) * 100}%` }}
+                        />
+
+                        {steps.map((step, idx) => {
+                          const isCompleted = idx <= currentStep;
+                          const isActive = idx === currentStep;
+                          return (
+                            <div key={step} className="flex flex-col items-center z-10 relative">
+                              <div
+                                className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${
+                                  isCompleted
+                                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25"
+                                    : "bg-slate-200 text-slate-500"
+                                } ${isActive ? "ring-4 ring-emerald-500/25" : ""}`}
+                              >
+                                {idx + 1}
+                              </div>
+                              <span
+                                className={`text-[9px] font-extrabold mt-1.5 ${
+                                  isCompleted ? "text-emerald-700 font-black" : "text-slate-400"
+                                }`}
+                              >
+                                {step}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Security & Provider Info */}

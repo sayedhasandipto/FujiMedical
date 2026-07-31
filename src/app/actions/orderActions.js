@@ -18,6 +18,8 @@ export async function createOrder(orderData) {
       shippingFee,
       totalAmount,
       paymentMethod = "Cash on Delivery",
+      email = "",
+      userId = "",
     } = orderData;
 
     if (!customerName || !phone || !address) {
@@ -35,12 +37,15 @@ export async function createOrder(orderData) {
       address: address.trim(),
       deliveryArea: deliveryArea || "Inside Dhaka",
       notes: notes ? notes.trim() : "",
+      email: email ? email.trim() : "",
+      userId: userId ? userId.trim() : "",
       items: cartItems.map((item) => ({
         productId: item._id,
         name: item.name,
         price: item.offerPrice ? Number(item.offerPrice) : Number(item.price),
         quantity: item.quantity,
         total: (item.offerPrice ? Number(item.offerPrice) : Number(item.price)) * item.quantity,
+        image: item.image || "",
       })),
       subtotal: Number(subtotal),
       shippingFee: Number(shippingFee),
@@ -94,6 +99,27 @@ export async function createOrder(orderData) {
         ...orderObj,
       },
     };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getUserOrders(email) {
+  try {
+    if (!email) {
+      return { success: false, error: "Email is required" };
+    }
+    const ordersCol = await getCollection("orders");
+    const result = await ordersCol.find({ email: email.trim() }).sort({ createdAt: -1 }).toArray();
+
+    // Map MongoDB ObjectIDs and Date types to clean objects
+    const orders = result.map((order) => ({
+      ...order,
+      _id: order._id.toString(),
+      createdAt: order.createdAt ? order.createdAt.toISOString() : null,
+    }));
+
+    return { success: true, data: orders };
   } catch (error) {
     return { success: false, error: error.message };
   }

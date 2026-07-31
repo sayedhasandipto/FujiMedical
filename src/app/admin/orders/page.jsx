@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   MdRefresh,
   MdSearch,
@@ -13,310 +13,371 @@ import {
   MdPending,
   MdReceipt,
   MdKeyboardArrowDown,
+  MdCancel,
+  MdNoteAlt,
+  MdPayments,
 } from "react-icons/md";
 import { FiPackage } from "react-icons/fi";
 
+// ─── Status config ────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
   Pending: {
     label: "Pending",
-    color: "#f59e0b",
-    bg: "#fffbeb",
-    border: "#fde68a",
+    tw: "bg-amber-100 text-amber-700 border-amber-200",
+    dot: "bg-amber-500",
     icon: MdPending,
-    next: "Processing",
   },
   Processing: {
     label: "Processing",
-    color: "#3b82f6",
-    bg: "#eff6ff",
-    border: "#bfdbfe",
+    tw: "bg-blue-100 text-blue-700 border-blue-200",
+    dot: "bg-blue-500",
     icon: MdLocalShipping,
-    next: "Delivered",
+  },
+  Shipped: {
+    label: "Shipped",
+    tw: "bg-indigo-100 text-indigo-700 border-indigo-200",
+    dot: "bg-indigo-500",
+    icon: MdLocalShipping,
   },
   Delivered: {
     label: "Delivered",
-    color: "#16a34a",
-    bg: "#f0fdf4",
-    border: "#bbf7d0",
+    tw: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    dot: "bg-emerald-500",
     icon: MdCheckCircle,
-    next: null,
+  },
+  Cancelled: {
+    label: "Cancelled",
+    tw: "bg-rose-100 text-rose-700 border-rose-200",
+    dot: "bg-rose-500",
+    icon: MdCancel,
   },
 };
 
+const ALL_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+
+// ─── Toast notification ───────────────────────────────────────────────────────
+function Toast({ toasts }) {
+  return (
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl text-sm font-bold border pointer-events-auto animate-fade-in transition-all ${
+            t.type === "success"
+              ? "bg-emerald-600 text-white border-emerald-500"
+              : "bg-rose-600 text-white border-rose-500"
+          }`}
+        >
+          {t.type === "success" ? (
+            <MdCheckCircle className="w-5 h-5 shrink-0" />
+          ) : (
+            <MdCancel className="w-5 h-5 shrink-0" />
+          )}
+          {t.message}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Status badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.Pending;
   const Icon = cfg.icon;
   return (
     <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "4px",
-        padding: "3px 10px",
-        borderRadius: "99px",
-        fontSize: "11px",
-        fontWeight: "700",
-        color: cfg.color,
-        backgroundColor: cfg.bg,
-        border: `1.5px solid ${cfg.border}`,
-      }}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${cfg.tw}`}
     >
-      <Icon style={{ width: 13, height: 13 }} />
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      <Icon className="w-3 h-3" />
       {cfg.label}
     </span>
   );
 }
 
-function OrderCard({ order, onStatusChange }) {
-  const [loading, setLoading] = useState(false);
+// ─── Status dropdown ──────────────────────────────────────────────────────────
+function StatusDropdown({ currentStatus, onStatusChange, loading }) {
   const [open, setOpen] = useState(false);
-  const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.Pending;
+  const ref = useRef(null);
 
-  const handleStatusChange = async (newStatus) => {
-    if (loading) return;
-    setLoading(true);
-    try {
-      const res = await fetch("/api/admin/orders", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: order._id, status: newStatus }),
-      });
-      if (res.ok) onStatusChange(order._id, newStatus);
-    } catch {}
-    setLoading(false);
-  };
-
-  const total = order.total ?? order.grandTotal ?? 0;
-  const createdAt = order.createdAt
-    ? new Date(order.createdAt).toLocaleString("en-BD", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      })
-    : "—";
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   return (
-    <div
-      style={{
-        background: "#ffffff",
-        border: "1.5px solid #e2e8f0",
-        borderRadius: "16px",
-        overflow: "hidden",
-        boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
-        marginBottom: "12px",
-      }}
-    >
-      {/* Header Row */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "14px 18px",
-          backgroundColor: "#f8fafc",
-          borderBottom: "1px solid #f1f5f9",
-          flexWrap: "wrap",
-          gap: "8px",
-          cursor: "pointer",
+    <div ref={ref} className="relative">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
         }}
-        onClick={() => setOpen((v) => !v)}
+        disabled={loading}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 text-slate-700 transition-all shadow-sm disabled:opacity-60 cursor-pointer"
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: "10px",
-              backgroundColor: "#ecfdf5",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <MdReceipt style={{ color: "#16a34a", width: 18, height: 18 }} />
-          </div>
-          <div>
-            <p style={{ fontWeight: 800, fontSize: 13, color: "#0f172a" }}>
-              {order.orderId || order._id?.toString().slice(-8).toUpperCase()}
-            </p>
-            <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 1 }}>{createdAt}</p>
-          </div>
-        </div>
+        {loading ? (
+          <span className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <MdKeyboardArrowDown className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`} />
+        )}
+        Update Status
+      </button>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <StatusBadge status={order.status} />
-          <span style={{ fontWeight: 900, fontSize: 15, color: "#16a34a" }}>
-            ৳{Number(total).toFixed(2)}
-          </span>
-          <MdKeyboardArrowDown
-            style={{
-              color: "#94a3b8",
-              transform: open ? "rotate(180deg)" : "none",
-              transition: "transform 0.2s",
-              width: 20,
-              height: 20,
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Expandable Details */}
       {open && (
-        <div style={{ padding: "18px" }}>
-          {/* Customer Info */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: "12px",
-              marginBottom: "16px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <MdPerson style={{ color: "#16a34a", width: 16, height: 16, marginTop: 2, flexShrink: 0 }} />
-              <div>
-                <p style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600 }}>Customer</p>
-                <p style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>
-                  {order.customerName || "—"}
-                </p>
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <MdPhone style={{ color: "#16a34a", width: 16, height: 16, marginTop: 2, flexShrink: 0 }} />
-              <div>
-                <p style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600 }}>Phone</p>
-                <p style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>{order.phone || "—"}</p>
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <MdLocationOn style={{ color: "#16a34a", width: 16, height: 16, marginTop: 2, flexShrink: 0 }} />
-              <div>
-                <p style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600 }}>Address</p>
-                <p style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>
-                  {order.address || "—"}
-                  {order.deliveryArea ? ` (${order.deliveryArea})` : ""}
-                </p>
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <MdShoppingBag style={{ color: "#16a34a", width: 16, height: 16, marginTop: 2, flexShrink: 0 }} />
-              <div>
-                <p style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600 }}>Payment</p>
-                <p style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>
-                  {order.paymentMethod || "Cash on Delivery"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Order Items */}
-          <div
-            style={{
-              backgroundColor: "#f8fafc",
-              borderRadius: "12px",
-              padding: "12px",
-              marginBottom: "14px",
-              border: "1px solid #f1f5f9",
-            }}
-          >
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#64748b", marginBottom: 8 }}>
-              ORDER ITEMS
-            </p>
-            {(order.items || []).map((item, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "6px 0",
-                  borderBottom: i < order.items.length - 1 ? "1px solid #e2e8f0" : "none",
-                }}
-              >
-                <span style={{ fontSize: 13, color: "#374151", fontWeight: 600 }}>
-                  {item.name}
-                  <span style={{ color: "#94a3b8", fontWeight: 500, fontSize: 12 }}>
-                    {" "}× {item.quantity}
-                  </span>
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 800, color: "#0f172a" }}>
-                  ৳{(Number(item.price || item.offerPrice) * item.quantity).toFixed(2)}
-                </span>
-              </div>
-            ))}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: "10px",
-                paddingTop: "8px",
-                borderTop: "2px solid #e2e8f0",
-              }}
-            >
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#64748b" }}>
-                Delivery: {order.deliveryArea === "Outside Dhaka" ? "৳120" : "৳60"}
-              </span>
-              <span style={{ fontSize: 14, fontWeight: 900, color: "#16a34a" }}>
-                Total: ৳{Number(total).toFixed(2)}
-              </span>
-            </div>
-          </div>
-
-          {order.notes && (
-            <p style={{ fontSize: 12, color: "#64748b", marginBottom: 14, fontStyle: "italic" }}>
-              📝 {order.notes}
-            </p>
-          )}
-
-          {/* Status Update Buttons */}
-          {cfg.next && (
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+        <div className="absolute right-0 top-full mt-1.5 z-30 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden w-44 py-1">
+          {ALL_STATUSES.map((s) => {
+            const cfg = STATUS_CONFIG[s];
+            const isCurrent = s === currentStatus;
+            return (
               <button
-                onClick={() => handleStatusChange(cfg.next)}
-                disabled={loading}
-                style={{
-                  padding: "9px 20px",
-                  borderRadius: "10px",
-                  backgroundColor: "#16a34a",
-                  color: "#fff",
-                  fontWeight: 700,
-                  fontSize: 13,
-                  border: "none",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  opacity: loading ? 0.7 : 1,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  transition: "background 0.15s",
+                key={s}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isCurrent) {
+                    onStatusChange(s);
+                    setOpen(false);
+                  }
                 }}
+                disabled={isCurrent}
+                className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-bold transition-all text-left cursor-pointer ${
+                  isCurrent
+                    ? "bg-slate-50 text-slate-400 cursor-not-allowed"
+                    : "hover:bg-slate-50 text-slate-700"
+                }`}
               >
-                {loading ? (
-                  <span style={{ width: 14, height: 14, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
-                ) : (
-                  <MdCheckCircle style={{ width: 16, height: 16 }} />
+                <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
+                {cfg.label}
+                {isCurrent && (
+                  <span className="ml-auto text-[10px] text-slate-400 font-normal">current</span>
                 )}
-                Mark as {cfg.next}
-                {cfg.next === "Delivered" && " (Deducts Stock)"}
               </button>
-            </div>
-          )}
-
-          {order.status === "Delivered" && (
-            <p style={{ fontSize: 12, color: "#16a34a", fontWeight: 700 }}>
-              ✅ Order completed. Stock has been adjusted.
-            </p>
-          )}
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
 
+// ─── Order card ───────────────────────────────────────────────────────────────
+function OrderCard({ order, onStatusChange, addToast }) {
+  const [updating, setUpdating] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const handleStatusChange = async (newStatus) => {
+    if (updating) return;
+    setUpdating(true);
+    try {
+      const res = await fetch("/api/admin/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: order._id, status: newStatus }),
+      });
+      if (res.ok) {
+        onStatusChange(order._id, newStatus);
+        addToast(`Order ${order.orderId || order._id.toString().slice(-6)} → ${newStatus}`, "success");
+      } else {
+        addToast("Failed to update status", "error");
+      }
+    } catch {
+      addToast("Network error. Please retry.", "error");
+    }
+    setUpdating(false);
+  };
+
+  const createdAt = order.createdAt
+    ? new Date(order.createdAt).toLocaleDateString("en-BD", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+
+  const total = Number(order.total || order.totalAmount || order.grandTotal || 0);
+  const itemCount = (order.items || []).reduce((sum, i) => sum + (i.quantity || 1), 0);
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      {/* ── Header row (always visible) ── */}
+      <div
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center justify-between px-5 py-4 cursor-pointer select-none bg-slate-50/60 hover:bg-slate-50 transition-colors gap-3 flex-wrap"
+      >
+        {/* Left: icon + order ID + date */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
+            <MdReceipt className="w-5 h-5 text-emerald-600" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-black text-slate-900 text-sm truncate">
+              {order.orderId || "#" + order._id?.toString().slice(-8).toUpperCase()}
+            </p>
+            <p className="text-[11px] text-slate-400 font-medium">{createdAt}</p>
+          </div>
+        </div>
+
+        {/* Center: customer name & item count (hidden on xs) */}
+        <div className="hidden sm:block min-w-0 flex-1 px-4">
+          <p className="text-sm font-bold text-slate-700 truncate">{order.customerName || "—"}</p>
+          <p className="text-[11px] text-slate-400">{itemCount} item{itemCount !== 1 ? "s" : ""}</p>
+        </div>
+
+        {/* Right: badge + total + arrow */}
+        <div className="flex items-center gap-3 shrink-0">
+          <StatusBadge status={order.status} />
+          <span className="font-black text-emerald-600 text-sm">৳{total.toFixed(2)}</span>
+          <MdKeyboardArrowDown
+            className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          />
+        </div>
+      </div>
+
+      {/* ── Expandable details ── */}
+      {open && (
+        <div className="border-t border-slate-100 p-5 space-y-5">
+          {/* Customer info grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="flex items-start gap-2.5">
+              <MdPerson className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Customer</p>
+                <p className="text-sm font-bold text-slate-800">{order.customerName || "—"}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2.5">
+              <MdPhone className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phone</p>
+                <p className="text-sm font-bold text-slate-800">{order.phone || "—"}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2.5">
+              <MdLocationOn className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Address</p>
+                <p className="text-sm font-bold text-slate-800">
+                  {order.address || "—"}
+                  {order.deliveryArea ? (
+                    <span className="text-slate-500 font-normal"> ({order.deliveryArea})</span>
+                  ) : null}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2.5">
+              <MdPayments className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Payment</p>
+                <p className="text-sm font-bold text-slate-800">{order.paymentMethod || "COD"}</p>
+                {order.paymentStatus && (
+                  <p className="text-[11px] text-slate-500 mt-0.5">{order.paymentStatus}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Notes */}
+          {order.notes && (
+            <div className="flex items-start gap-2 text-xs text-slate-500 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+              <MdNoteAlt className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+              <span className="italic">{order.notes}</span>
+            </div>
+          )}
+
+          {/* Order items list */}
+          <div className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
+            <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+              <MdShoppingBag className="w-4 h-4 text-emerald-600" />
+              <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                Ordered Items ({(order.items || []).length})
+              </p>
+            </div>
+
+            <div className="divide-y divide-slate-100">
+              {(order.items || []).map((item, idx) => {
+                const imgSrc =
+                  item.image ||
+                  `https://placehold.co/64x64/10b981/ffffff?text=${encodeURIComponent(
+                    (item.name || "Item").slice(0, 2)
+                  )}`;
+                const lineTotal = Number(item.total || (Number(item.price || 0) * item.quantity)).toFixed(2);
+                return (
+                  <div key={idx} className="flex items-center gap-3 px-4 py-3">
+                    <img
+                      src={imgSrc}
+                      alt={item.name}
+                      className="w-12 h-12 rounded-xl object-cover border border-slate-200 bg-white shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-slate-800 truncate">{item.name}</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        ৳{Number(item.price || 0).toFixed(2)} × {item.quantity}
+                      </p>
+                    </div>
+                    <span className="text-sm font-black text-slate-900 shrink-0">৳{lineTotal}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Subtotal / shipping / total footer */}
+            <div className="px-4 py-3 border-t border-slate-200 bg-white space-y-1.5">
+              {order.subtotal != null && (
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>Subtotal</span>
+                  <span>৳{Number(order.subtotal).toFixed(2)}</span>
+                </div>
+              )}
+              {order.shippingFee != null && (
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>Shipping ({order.deliveryArea || "Inside Dhaka"})</span>
+                  <span>৳{Number(order.shippingFee).toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-sm font-black text-emerald-700 pt-1 border-t border-slate-100">
+                <span>Grand Total</span>
+                <span>৳{total.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Status update row */}
+          <div className="flex items-center justify-between flex-wrap gap-3 pt-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 font-semibold">Current Status:</span>
+              <StatusBadge status={order.status} />
+            </div>
+            <StatusDropdown
+              currentStatus={order.status}
+              onStatusChange={handleStatusChange}
+              loading={updating}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (message, type = "success") => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+  };
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -349,7 +410,8 @@ export default function AdminOrdersPage() {
       !q ||
       (o.customerName || "").toLowerCase().includes(q) ||
       (o.phone || "").includes(q) ||
-      (o.orderId || "").toLowerCase().includes(q);
+      (o.orderId || "").toLowerCase().includes(q) ||
+      (o.address || "").toLowerCase().includes(q);
     return matchFilter && matchSearch;
   });
 
@@ -357,140 +419,130 @@ export default function AdminOrdersPage() {
     All: orders.length,
     Pending: orders.filter((o) => o.status === "Pending").length,
     Processing: orders.filter((o) => o.status === "Processing").length,
+    Shipped: orders.filter((o) => o.status === "Shipped").length,
     Delivered: orders.filter((o) => o.status === "Delivered").length,
+    Cancelled: orders.filter((o) => o.status === "Cancelled").length,
   };
 
   const totalRevenue = orders
     .filter((o) => o.status === "Delivered")
-    .reduce((sum, o) => sum + Number(o.total || o.grandTotal || 0), 0);
+    .reduce((sum, o) => sum + Number(o.total || o.totalAmount || o.grandTotal || 0), 0);
+
+  const statCards = [
+    { label: "Total Orders", value: counts.All, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100" },
+    { label: "Pending", value: counts.Pending, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+    { label: "Processing", value: counts.Processing, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
+    { label: "Shipped", value: counts.Shipped, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100" },
+    { label: "Delivered", value: counts.Delivered, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
+    { label: "Revenue", value: `৳${totalRevenue.toFixed(0)}`, color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-100" },
+  ];
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#f8fafc" }}>
-      {/* Page Header */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 900, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
-              <FiPackage style={{ color: "#16a34a" }} /> Order Management
-            </h1>
-            <p style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
-              Manage customer orders and update delivery status
-            </p>
-          </div>
-          <button
-            onClick={fetchOrders}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "8px 16px",
-              borderRadius: "10px",
-              backgroundColor: "#16a34a",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: 12,
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            <MdRefresh style={{ width: 16, height: 16 }} /> Refresh
-          </button>
+    <div className="w-full space-y-6">
+      <Toast toasts={toasts} />
+
+      {/* ── Page Header ── */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2.5">
+            <FiPackage className="text-emerald-600 w-6 h-6" />
+            Order Management
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Manage customer orders and update delivery status
+          </p>
         </div>
+        <button
+          onClick={fetchOrders}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-sm transition-all cursor-pointer"
+        >
+          <MdRefresh className="w-4 h-4" />
+          Refresh
+        </button>
       </div>
 
-      {/* Stats Row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 24 }}>
-        {[
-          { label: "Total Orders", value: counts.All, color: "#6366f1", bg: "#eef2ff" },
-          { label: "Pending", value: counts.Pending, color: "#f59e0b", bg: "#fffbeb" },
-          { label: "Processing", value: counts.Processing, color: "#3b82f6", bg: "#eff6ff" },
-          { label: "Delivered", value: counts.Delivered, color: "#16a34a", bg: "#f0fdf4" },
-          { label: "Revenue", value: `৳${totalRevenue.toFixed(0)}`, color: "#16a34a", bg: "#f0fdf4" },
-        ].map((s) => (
+      {/* ── Stats Row ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {statCards.map((s) => (
           <div
             key={s.label}
-            style={{
-              backgroundColor: "#ffffff",
-              border: "1.5px solid #e2e8f0",
-              borderRadius: "14px",
-              padding: "16px",
-              textAlign: "center",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-            }}
+            className={`${s.bg} ${s.border} border rounded-2xl p-4 flex flex-col gap-1 shadow-sm`}
           >
-            <p style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", marginBottom: 6 }}>{s.label}</p>
-            <p style={{ fontSize: 22, fontWeight: 900, color: s.color }}>{s.value}</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{s.label}</p>
+            <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
           </div>
         ))}
       </div>
 
-      {/* Filter + Search */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
-        {["All", "Pending", "Processing", "Delivered"].map((f) => (
+      {/* ── Filter Tabs + Search ── */}
+      <div className="flex gap-2 flex-wrap items-center">
+        {["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            style={{
-              padding: "7px 16px",
-              borderRadius: "99px",
-              fontWeight: 700,
-              fontSize: 12,
-              border: filter === f ? "2px solid #16a34a" : "1.5px solid #e2e8f0",
-              backgroundColor: filter === f ? "#f0fdf4" : "#ffffff",
-              color: filter === f ? "#16a34a" : "#64748b",
-              cursor: "pointer",
-            }}
+            className={`px-4 py-2 rounded-xl font-bold text-xs border transition-all cursor-pointer ${
+              filter === f
+                ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                : "bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-700"
+            }`}
           >
-            {f} ({counts[f] ?? 0})
+            {f}
+            {counts[f] != null && (
+              <span
+                className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                  filter === f ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {counts[f]}
+              </span>
+            )}
           </button>
         ))}
-        <div style={{ position: "relative", marginLeft: "auto", minWidth: 220 }}>
-          <MdSearch style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", width: 18, height: 18 }} />
+
+        {/* Search */}
+        <div className="relative ml-auto min-w-0 w-full sm:w-64">
+          <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
           <input
             type="text"
             placeholder="Search name, phone, order ID..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{
-              paddingLeft: 34,
-              paddingRight: 12,
-              paddingTop: 8,
-              paddingBottom: 8,
-              border: "1.5px solid #e2e8f0",
-              borderRadius: "10px",
-              fontSize: 12,
-              width: "100%",
-              backgroundColor: "#ffffff",
-              color: "#0f172a",
-              outline: "none",
-            }}
+            className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold bg-white text-slate-800 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10 transition-all"
           />
         </div>
       </div>
 
-      {/* Orders List */}
+      {/* ── Error ── */}
       {error && (
-        <div style={{ padding: 16, backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12, color: "#dc2626", fontSize: 13, marginBottom: 16 }}>
-          {error}
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-sm font-semibold">
+          ⚠ {error}
         </div>
       )}
 
+      {/* ── Orders List ── */}
       {loading ? (
-        <div style={{ display: "flex", justifyContent: "center", padding: 48 }}>
-          <div style={{ width: 36, height: 36, border: "4px solid #16a34a", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+        <div className="flex flex-col items-center justify-center py-20 gap-4 text-slate-400">
+          <div className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-semibold">Loading orders...</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 48, color: "#94a3b8" }}>
-          <FiPackage style={{ width: 40, height: 40, margin: "0 auto 12px", display: "block" }} />
-          <p style={{ fontWeight: 700 }}>No orders found</p>
+        <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
+          <FiPackage className="w-12 h-12" />
+          <p className="font-bold text-slate-600">No orders found</p>
+          <p className="text-sm">Try adjusting your search or filter</p>
         </div>
       ) : (
-        filtered.map((order) => (
-          <OrderCard key={order._id} order={order} onStatusChange={handleStatusChange} />
-        ))
+        <div className="space-y-3">
+          {filtered.map((order) => (
+            <OrderCard
+              key={order._id}
+              order={order}
+              onStatusChange={handleStatusChange}
+              addToast={addToast}
+            />
+          ))}
+        </div>
       )}
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

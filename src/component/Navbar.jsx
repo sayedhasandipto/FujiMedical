@@ -164,6 +164,15 @@ export default function Navbar() {
                     <span>My Profile</span>
                   </Link>
 
+                  <Link
+                    href="/profile#orders"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
+                  >
+                    <MdShoppingBag className="text-emerald-600 text-base" />
+                    <span>My Orders</span>
+                  </Link>
+
                   {user?.role === "admin" && (
                     <Link
                       href="/admin/products"
