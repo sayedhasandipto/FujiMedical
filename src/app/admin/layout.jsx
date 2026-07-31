@@ -10,6 +10,7 @@ import {
   FiLogOut,
   FiUserCheck,
   FiAlertTriangle,
+  FiClipboard,
 } from "react-icons/fi";
 
 export const metadata = {
@@ -92,6 +93,14 @@ export default async function AdminLayout({ children }) {
             >
               <FiBox className="w-5 h-5 text-slate-400 group-hover:text-emerald-400 transition" />
               Products
+            </Link>
+
+            <Link
+              href="/admin/orders"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition group font-medium"
+            >
+              <FiClipboard className="w-5 h-5 text-slate-400 group-hover:text-emerald-400 transition" />
+              Orders
             </Link>
 
             <Link

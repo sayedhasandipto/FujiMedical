@@ -72,9 +72,15 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center py-20 text-slate-400 space-y-3">
-        <div className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm font-semibold">Loading product details...</p>
+      <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{
+          width: 48, height: 48,
+          border: "5px solid #d1fae5",
+          borderTop: "5px solid #16a34a",
+          borderRadius: "50%",
+          animation: "spin 0.8s linear infinite"
+        }} />
+        <style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
       </div>
     );
   }
@@ -245,34 +251,26 @@ export default function ProductDetailPage() {
 
               {/* Quantity Selector Section */}
               {!isOutOfStock && (
-                <div className="flex items-center gap-4 py-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-sm font-extrabold text-slate-800 dark:text-slate-200">
+                <div className="flex items-center gap-4 p-4 rounded-2xl border border-slate-200" style={{backgroundColor:"#f8fafc"}}>
+                  <span className="text-sm font-extrabold" style={{color:"#1e293b"}}>
                     Quantity:
                   </span>
-                  <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-1 shadow-sm">
-                    <Button
-                      size="sm"
-                      isIconOnly
-                      variant="flat"
-                      className="bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 text-slate-800 dark:text-white font-bold"
+                  <div className="qty-wrapper">
+                    <button
+                      type="button"
+                      className="qty-btn-minus"
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     >
-                      <MdRemove className="w-4 h-4" />
-                    </Button>
-
-                    <span className="px-4 text-base font-black text-slate-900 dark:text-white">
-                      {quantity}
-                    </span>
-
-                    <Button
-                      size="sm"
-                      isIconOnly
-                      variant="flat"
-                      className="bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 text-slate-800 dark:text-white font-bold"
+                      −
+                    </button>
+                    <span className="qty-display">{quantity}</span>
+                    <button
+                      type="button"
+                      className="qty-btn-plus"
                       onClick={() => setQuantity((q) => Math.min(product.stock || 99, q + 1))}
                     >
-                      <MdAdd className="w-4 h-4" />
-                    </Button>
+                      +
+                    </button>
                   </div>
                 </div>
               )}

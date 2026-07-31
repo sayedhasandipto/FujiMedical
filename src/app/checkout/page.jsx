@@ -188,7 +188,7 @@ export default function CheckoutPage() {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Form Information Column */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl space-y-6">
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-xl space-y-6" style={{backgroundColor: "#ffffff"}}>
               <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <MdPerson className="text-emerald-600" /> Customer Information
               </h2>
@@ -212,7 +212,19 @@ export default function CheckoutPage() {
                     placeholder="Enter your full name"
                     value={form.customerName}
                     onChange={(e) => setForm({ ...form, customerName: e.target.value })}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                    style={{
+                      width: "100%",
+                      backgroundColor: "#ffffff",
+                      border: "1.5px solid #d1d5db",
+                      borderRadius: "12px",
+                      paddingLeft: "44px",
+                      paddingRight: "16px",
+                      paddingTop: "12px",
+                      paddingBottom: "12px",
+                      fontSize: "14px",
+                      color: "#0f172a",
+                      outline: "none",
+                    }}
                   />
                 </div>
               </div>
@@ -230,7 +242,19 @@ export default function CheckoutPage() {
                     placeholder="01700000000"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                    style={{
+                      width: "100%",
+                      backgroundColor: "#ffffff",
+                      border: "1.5px solid #d1d5db",
+                      borderRadius: "12px",
+                      paddingLeft: "44px",
+                      paddingRight: "16px",
+                      paddingTop: "12px",
+                      paddingBottom: "12px",
+                      fontSize: "14px",
+                      color: "#0f172a",
+                      outline: "none",
+                    }}
                   />
                 </div>
               </div>
@@ -244,27 +268,35 @@ export default function CheckoutPage() {
                   <button
                     type="button"
                     onClick={() => handleDeliveryAreaChange("Inside Dhaka")}
-                    className={`p-4 rounded-2xl border text-left transition ${
-                      form.deliveryArea === "Inside Dhaka"
-                        ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 font-extrabold shadow-sm"
-                        : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
-                    }`}
+                    style={{
+                      padding: "16px",
+                      borderRadius: "16px",
+                      border: form.deliveryArea === "Inside Dhaka" ? "2px solid #16a34a" : "1.5px solid #d1d5db",
+                      backgroundColor: form.deliveryArea === "Inside Dhaka" ? "#f0fdf4" : "#ffffff",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
                   >
-                    <p className="text-xs font-extrabold">Inside Dhaka</p>
-                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1">Delivery: ৳60</p>
+                    <p style={{fontSize: "12px", fontWeight: "800", color: form.deliveryArea === "Inside Dhaka" ? "#15803d" : "#374151"}}>Inside Dhaka</p>
+                    <p style={{fontSize: "11px", fontWeight: "700", color: "#16a34a", marginTop: "4px"}}>Delivery: ৳60</p>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => handleDeliveryAreaChange("Outside Dhaka")}
-                    className={`p-4 rounded-2xl border text-left transition ${
-                      form.deliveryArea === "Outside Dhaka"
-                        ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 font-extrabold shadow-sm"
-                        : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
-                    }`}
+                    style={{
+                      padding: "16px",
+                      borderRadius: "16px",
+                      border: form.deliveryArea === "Outside Dhaka" ? "2px solid #16a34a" : "1.5px solid #d1d5db",
+                      backgroundColor: form.deliveryArea === "Outside Dhaka" ? "#f0fdf4" : "#ffffff",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
                   >
-                    <p className="text-xs font-extrabold">Outside Dhaka</p>
-                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1">Delivery: ৳120</p>
+                    <p style={{fontSize: "12px", fontWeight: "800", color: form.deliveryArea === "Outside Dhaka" ? "#15803d" : "#374151"}}>Outside Dhaka</p>
+                    <p style={{fontSize: "11px", fontWeight: "700", color: "#16a34a", marginTop: "4px"}}>Delivery: ৳120</p>
                   </button>
                 </div>
               </div>
@@ -282,7 +314,20 @@ export default function CheckoutPage() {
                     placeholder="House/Holding no, Road, Area, Thana, District..."
                     value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                    style={{
+                      width: "100%",
+                      backgroundColor: "#ffffff",
+                      border: "1.5px solid #d1d5db",
+                      borderRadius: "12px",
+                      paddingLeft: "44px",
+                      paddingRight: "16px",
+                      paddingTop: "12px",
+                      paddingBottom: "12px",
+                      fontSize: "14px",
+                      color: "#0f172a",
+                      outline: "none",
+                      resize: "vertical",
+                    }}
                   />
                 </div>
               </div>
@@ -299,7 +344,19 @@ export default function CheckoutPage() {
                     placeholder="e.g. Call before delivery, deliver after 3 PM"
                     value={form.notes}
                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                    style={{
+                      width: "100%",
+                      backgroundColor: "#ffffff",
+                      border: "1.5px solid #d1d5db",
+                      borderRadius: "12px",
+                      paddingLeft: "44px",
+                      paddingRight: "16px",
+                      paddingTop: "12px",
+                      paddingBottom: "12px",
+                      fontSize: "14px",
+                      color: "#0f172a",
+                      outline: "none",
+                    }}
                   />
                 </div>
               </div>

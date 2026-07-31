@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
 import {
   MdShoppingCart,
@@ -13,10 +14,10 @@ import {
 } from "react-icons/md";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useCart } from "@/context/CartContext";
-import CartDrawer from "./CartDrawer";
 
 export default function Navbar() {
-  const { totalCount, setIsCartOpen } = useCart();
+  const { totalCount } = useCart();
+  const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -175,7 +176,7 @@ export default function Navbar() {
                   <button
                     onClick={() => {
                       setIsDropdownOpen(false);
-                      setIsCartOpen(true);
+                      router.push("/cart");
                     }}
                     className="w-full flex items-center justify-between px-3 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all cursor-pointer"
                   >
@@ -218,11 +219,11 @@ export default function Navbar() {
           </>
         )}
 
-        {/* Cart Button */}
-        <button
-          onClick={() => setIsCartOpen(true)}
+        {/* Cart Button → navigates to /cart page */}
+        <Link
+          href="/cart"
           className="btn btn-ghost btn-circle btn-sm relative hover:bg-emerald-100/50 group transition-all duration-300 text-emerald-800"
-          title="Open Shopping Cart"
+          title="View Shopping Cart"
         >
           <div className="indicator">
             <MdShoppingCart
@@ -235,10 +236,8 @@ export default function Navbar() {
               </span>
             )}
           </div>
-        </button>
+        </Link>
       </div>
-
-      <CartDrawer />
     </header>
   );
 }

@@ -1,11 +1,39 @@
 import React from "react";
-import { MdEmail, MdLocationOn, MdPhone } from "react-icons/md";
+import { MdEmail, MdLocationOn, MdPhone, MdAccessTime } from "react-icons/md";
+import Link from "next/link";
 
 const Footer = () => {
   return (
     <div>
+      {/* Google Map Section */}
+      <div className="w-full bg-emerald-950">
+        <div className="max-w-7xl mx-auto px-6 pt-10 pb-4">
+          <h3 className="text-white font-extrabold text-lg mb-3 flex items-center gap-2">
+            <MdLocationOn className="text-emerald-400 text-2xl" />
+            Find Us on the Map
+          </h3>
+          <div
+            className="w-full rounded-2xl overflow-hidden border-2 border-emerald-800/60 shadow-xl"
+            style={{ height: "280px" }}
+          >
+            <iframe
+              title="Fuji Medical Hall Location"
+              className="gmap-frame"
+              src="https://maps.google.com/maps?q=Dhaka,Bangladesh&t=&z=13&ie=UTF8&iwloc=&output=embed"
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+          <p className="text-emerald-400/70 text-xs mt-2 text-center">
+            📍 ফুজি মেডিকেল হল — Dhaka, Bangladesh
+          </p>
+        </div>
+      </div>
+
       <footer className="bg-emerald-900 text-white pt-10 pb-20 md:pb-10 px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="bg-white text-emerald-900 w-8 h-8 rounded-lg flex items-center justify-center font-bold">
@@ -16,68 +44,64 @@ const Footer = () => {
               </h2>
             </div>
             <p className="text-emerald-100 text-sm mb-4 leading-relaxed">
-              Your trusted healthcare partner for over 27 years. We provide
-              genuine medicines, expert consultations, and reliable lab tests
-              right at your doorstep.
+              বিশ্বস্ত ঔষধ সেবায় ২৭ বছর। আমরা সরবরাহ করি খাঁটি ওষুধ,
+              বিশেষজ্ঞ পরামর্শ এবং হোম ডেলিভারি সেবা।
             </p>
+            <div className="flex items-center gap-2 text-sm text-emerald-200">
+              <MdAccessTime className="text-emerald-400 shrink-0" />
+              <span>শনি–বৃহঃ: সকাল ৮টা – রাত ১০টা</span>
+            </div>
           </div>
 
+          {/* Contact */}
           <div>
             <h3 className="text-lg font-bold mb-4 border-b border-emerald-700 pb-2 inline-block">
-              Contact Us
+              যোগাযোগ করুন
             </h3>
             <ul className="space-y-3 text-sm text-emerald-100">
               <li className="flex items-start gap-3">
-                <MdLocationOn
-                  size={20}
-                  className="text-emerald-400 shrink-0 mt-0.5"
-                />
+                <MdLocationOn size={20} className="text-emerald-400 shrink-0 mt-0.5" />
                 <span>
-                  123 Health Avenue, Medical District
+                  ফুজি মেডিকেল হল, ঢাকা
                   <br />
-                  Dhaka 1200, Bangladesh
+                  Bangladesh
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <MdPhone size={20} className="text-emerald-400 shrink-0" />
-                <span>+880 1234 567890</span>
+                <a href="tel:+8801700000000" className="hover:text-white transition">
+                  +880 1700 000000
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <MdEmail size={20} className="text-emerald-400 shrink-0" />
-                <span>support@fujimedical.com</span>
+                <a href="mailto:support@fujimedical.com" className="hover:text-white transition">
+                  support@fujimedical.com
+                </a>
               </li>
             </ul>
           </div>
 
+          {/* Quick Links */}
           <div>
             <h3 className="text-lg font-bold mb-4 border-b border-emerald-700 pb-2 inline-block">
               Quick Links
             </h3>
             <ul className="space-y-2 text-sm text-emerald-100">
               <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  About Us
-                </a>
+                <Link href="/" className="hover:text-white transition-colors">Home</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Privacy Policy
-                </a>
+                <Link href="/categories" className="hover:text-white transition-colors">Categories</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Terms & Conditions
-                </a>
+                <Link href="/cart" className="hover:text-white transition-colors">My Cart</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Return Policy
-                </a>
+                <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  FAQ
-                </a>
+                <a href="#" className="hover:text-white transition-colors">Return Policy</a>
               </li>
             </ul>
           </div>
@@ -85,8 +109,7 @@ const Footer = () => {
 
         <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-emerald-800 text-center text-xs text-emerald-300">
           <p>
-            &copy; {new Date().getFullYear()} Fuji Medical Hall. All rights
-            reserved.
+            &copy; {new Date().getFullYear()} ফুজি মেডিকেল হল। সর্বস্বত্ব সংরক্ষিত।
           </p>
         </div>
       </footer>
