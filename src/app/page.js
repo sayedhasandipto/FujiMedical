@@ -117,7 +117,7 @@ export default function Home() {
   }, [carouselSlides.length]);
 
   const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase())
+    cat.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const filteredProducts = products.filter((p) => {
@@ -129,7 +129,8 @@ export default function Home() {
 
     const matchesCategory =
       !selectedCategory ||
-      (p.category && p.category.toLowerCase() === selectedCategory.name?.toLowerCase());
+      (p.category &&
+        p.category.toLowerCase() === selectedCategory.name?.toLowerCase());
 
     return matchesSearch && matchesCategory;
   });
@@ -143,35 +144,8 @@ export default function Home() {
   return (
     <div className="flex-1 flex flex-col pb-24 min-h-screen text-zinc-800 dark:text-zinc-100">
       <main className="max-w-container-max mx-auto w-full px-3 md:px-8">
-        {/* Search Section */}
-        <section className="py-3 md:py-6">
-          <div className="relative group max-w-2xl mx-auto">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-emerald-600 dark:text-emerald-500">
-              <MdSearch size={20} />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-emerald-100/80 dark:border-zinc-800/80 rounded-2xl py-2.5 pl-12 pr-12 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 focus:outline-none transition-all text-zinc-850 dark:text-zinc-100 placeholder-zinc-400 font-body-md text-sm md:text-base"
-              placeholder="Search medicines from MongoDB..."
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute inset-y-0 right-12 flex items-center pr-3 text-zinc-400 hover:text-emerald-600 cursor-pointer"
-              >
-                <MdClose size={18} />
-              </button>
-            )}
-            <div className="absolute inset-y-0 right-4 flex items-center cursor-pointer text-emerald-600 hover:text-emerald-700 transition-colors">
-              <MdMic size={20} />
-            </div>
-          </div>
-        </section>
-
         {/* Hero Carousel Section */}
-        <section className="relative overflow-hidden rounded-3xl h-44 md:h-72 group border border-emerald-100/40 dark:border-zinc-800/80">
+        <section className="relative overflow-hidden rounded-3xl h-44 md:h-72 mt-10 max-sm:mt-5 group border border-emerald-100/40 dark:border-zinc-800/80">
           <div
             className="flex transition-transform duration-700 ease-in-out h-full"
             style={{
@@ -182,7 +156,7 @@ export default function Home() {
             {carouselSlides.map((slide, idx) => (
               <div
                 key={idx}
-                className={`w-full h-full relative flex items-center p-6 md:p-12 overflow-hidden select-none flex-shrink-0 min-w-full ${slide.bgClass}`}
+                className={`w-full h-full relative flex items-center p-6 md:p-12 overflow-hidden select-none shrink-0 min-w-full ${slide.bgClass}`}
               >
                 <div className="z-10 text-white max-w-[60%] md:max-w-[55%] flex flex-col items-start gap-1.5 md:gap-3">
                   <span className="bg-white/20 text-white text-[8px] md:text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider backdrop-blur-sm">
@@ -240,7 +214,7 @@ export default function Home() {
                 Browse medicines & equipment by category
               </p>
             </div>
-            
+
             <button
               onClick={() => setIsFilterOpen(true)}
               className="md:hidden flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] shadow cursor-pointer active:scale-95"
@@ -259,7 +233,9 @@ export default function Home() {
 
           {categories.length === 0 ? (
             <div className="text-center py-6 bg-emerald-50/20 dark:bg-zinc-900 rounded-2xl border border-dashed border-emerald-200">
-              <p className="text-xs text-zinc-500 font-medium">Loading categories...</p>
+              <p className="text-xs text-zinc-500 font-medium">
+                Loading categories...
+              </p>
             </div>
           ) : (
             /* Desktop categories scroll bar */
@@ -333,7 +309,9 @@ export default function Home() {
 
                   {categories.map((cat) => {
                     const count = products.filter(
-                      (p) => p.category && p.category.toLowerCase() === cat.name.toLowerCase()
+                      (p) =>
+                        p.category &&
+                        p.category.toLowerCase() === cat.name.toLowerCase(),
                     ).length;
                     return (
                       <button
@@ -369,14 +347,20 @@ export default function Home() {
         )}
 
         {/* Live Products Section */}
-        <section id="products-section" className="py-4 border-t border-emerald-50 dark:border-zinc-900">
+        <section
+          id="products-section"
+          className="py-4 border-t border-emerald-50 dark:border-zinc-900"
+        >
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-black dark:text-white font-extrabold text-lg md:text-2xl capitalize">
-                {selectedCategory ? `${selectedCategory.name} Products` : "All Products"}
+                {selectedCategory
+                  ? `${selectedCategory.name} Products`
+                  : "All Products"}
               </h3>
               <p className="text-[11px] md:text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-                Showing live medicines & inventory from MongoDB ({filteredProducts.length} items)
+                Showing live medicines & inventory from MongoDB (
+                {filteredProducts.length} items)
               </p>
             </div>
             {selectedCategory && (
@@ -392,7 +376,9 @@ export default function Home() {
           {loading ? (
             <div className="py-20 text-center text-zinc-400 space-y-3">
               <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-sm font-semibold">Loading live products from MongoDB...</p>
+              <p className="text-sm font-semibold">
+                Loading live products from MongoDB...
+              </p>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="text-center py-16 bg-emerald-50/20 dark:bg-zinc-900 rounded-3xl border border-dashed border-emerald-200">
@@ -400,29 +386,37 @@ export default function Home() {
                 No products found in MongoDB
               </p>
               <p className="text-xs text-zinc-400 mt-1">
-                Add products from the Admin Dashboard or adjust your search filter.
+                Add products from the Admin Dashboard or adjust your search
+                filter.
               </p>
             </div>
           ) : (
             /* Perfectly responsive 2 columns grid on small screens, scaling up to 5 on large screens */
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
               {filteredProducts.map((product) => {
-                const isOutOfStock = product.stock !== undefined && product.stock <= 0;
+                const isOutOfStock =
+                  product.stock !== undefined && product.stock <= 0;
                 return (
                   <div
                     key={product._id}
                     className="p-3 bg-white dark:bg-zinc-900 rounded-2xl border border-emerald-100/60 dark:border-zinc-800 flex flex-col justify-between hover:border-emerald-500 hover:shadow-lg transition-all duration-300 group"
                   >
-                    <Link href={`/products/${product._id}`} className="flex flex-col gap-2">
+                    <Link
+                      href={`/products/${product._id}`}
+                      className="flex flex-col gap-2"
+                    >
                       <div className="relative aspect-square w-full rounded-xl bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center overflow-hidden border border-emerald-50/30">
                         {product.image ? (
                           <img
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            src={product.image || `https://placehold.co/300x300/10b981/ffffff?text=${encodeURIComponent(product.name || "Medicine")}`}
+                            src={
+                              product.image ||
+                              `https://placehold.co/300x300/10b981/ffffff?text=${encodeURIComponent(product.name || "Medicine")}`
+                            }
                             alt={product.name}
                             onError={(e) => {
                               e.currentTarget.src = `https://placehold.co/300x300/10b981/ffffff?text=${encodeURIComponent(
-                                product.name || "Medicine"
+                                product.name || "Medicine",
                               )}`;
                             }}
                           />
