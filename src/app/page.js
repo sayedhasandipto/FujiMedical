@@ -26,6 +26,7 @@ import {
   MdMail,
   MdMenu,
   MdBlock,
+  MdFilterList,
 } from "react-icons/md";
 import {
   FaStore,
@@ -53,6 +54,7 @@ export default function Home() {
   const [activeService, setActiveService] = useState("Store");
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const { addToCart, setIsCartOpen } = useCart();
 
@@ -157,7 +159,7 @@ export default function Home() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute inset-y-0 right-12 flex items-center pr-3 text-zinc-400 hover:text-emerald-600"
+                className="absolute inset-y-0 right-12 flex items-center pr-3 text-zinc-400 hover:text-emerald-600 cursor-pointer"
               >
                 <MdClose size={18} />
               </button>
@@ -194,7 +196,7 @@ export default function Home() {
                   </p>
                   <button
                     onClick={slide.action}
-                    className="mt-1 md:mt-2.5 bg-white text-emerald-800 hover:bg-emerald-50 hover:scale-[1.02] active:scale-[0.98] px-3.5 py-1.5 md:px-5 md:py-2 rounded-xl font-bold text-[10px] md:text-xs transition-all duration-300 flex items-center gap-1.5"
+                    className="mt-1 md:mt-2.5 bg-white text-emerald-800 hover:bg-emerald-50 hover:scale-[1.02] active:scale-[0.98] px-3.5 py-1.5 md:px-5 md:py-2 rounded-xl font-bold text-[10px] md:text-xs transition-all duration-300 flex items-center gap-1.5 cursor-pointer"
                   >
                     <span>{slide.btnText}</span>
                     <MdArrowForward size={12} className="md:w-3.5 md:h-3.5" />
@@ -216,7 +218,7 @@ export default function Home() {
               <button
                 key={idx}
                 onClick={() => setCurrentSlide(idx)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                   currentSlide === idx
                     ? "w-5 bg-white"
                     : "w-1.5 bg-white/45 hover:bg-white/65"
@@ -231,16 +233,24 @@ export default function Home() {
         <section id="categories-section" className="py-6">
           <div className="flex justify-between items-center mb-3 font-sans">
             <div>
-              <h3 className="text-black dark:text-white font-extrabold text-xl md:text-2xl">
+              <h3 className="text-black dark:text-white font-extrabold text-lg md:text-2xl">
                 Categories
               </h3>
               <p className="text-[11px] md:text-xs text-zinc-600 dark:text-zinc-400 font-medium">
                 Browse medicines & equipment by category
               </p>
             </div>
+            
+            <button
+              onClick={() => setIsFilterOpen(true)}
+              className="md:hidden flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] shadow cursor-pointer active:scale-95"
+            >
+              <MdFilterList /> Filter
+            </button>
+
             <Link
               href="/categories"
-              className="text-xs md:text-sm font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50/50 dark:hover:bg-zinc-900/50 transition-all flex items-center gap-1"
+              className="hidden md:flex text-xs md:text-sm font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 px-2.5 py-1.5 rounded-lg hover:bg-emerald-50/50 dark:hover:bg-zinc-900/50 transition-all items-center gap-1"
             >
               <span>View All Categories</span>
               <MdArrowForward />
@@ -252,10 +262,11 @@ export default function Home() {
               <p className="text-xs text-zinc-500 font-medium">Loading categories...</p>
             </div>
           ) : (
-            <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
+            /* Desktop categories scroll bar */
+            <div className="hidden md:flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
                   !selectedCategory
                     ? "bg-emerald-600 text-white shadow-md"
                     : "bg-white dark:bg-zinc-900 border border-emerald-100 text-zinc-700 dark:text-zinc-300 hover:bg-emerald-50"
@@ -267,7 +278,7 @@ export default function Home() {
                 <button
                   key={cat._id}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
                     selectedCategory?._id === cat._id
                       ? "bg-emerald-600 text-white shadow-md"
                       : "bg-white dark:bg-zinc-900 border border-emerald-100 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-emerald-50"
@@ -281,11 +292,87 @@ export default function Home() {
           )}
         </section>
 
+        {/* Mobile Filter Drawer / Modal */}
+        {isFilterOpen && (
+          <div className="fixed inset-0 z-50 md:hidden">
+            <div
+              onClick={() => setIsFilterOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            />
+            <div className="absolute right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white dark:bg-zinc-950 shadow-2xl p-6 flex flex-col justify-between animate-in slide-in-from-right duration-200">
+              <div>
+                <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
+                  <h3 className="font-extrabold text-sm text-zinc-900 dark:text-white flex items-center gap-1.5">
+                    <MdFilterList className="text-emerald-600" /> Categories
+                  </h3>
+                  <button
+                    onClick={() => setIsFilterOpen(false)}
+                    className="p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 cursor-pointer"
+                  >
+                    <MdClose className="text-lg" />
+                  </button>
+                </div>
+
+                <div className="space-y-2 overflow-y-auto max-h-[70vh] pr-1">
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(null);
+                      setIsFilterOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs flex justify-between items-center transition ${
+                      !selectedCategory
+                        ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                        : "bg-zinc-50 dark:bg-zinc-900 border border-transparent text-zinc-700 dark:text-zinc-300"
+                    }`}
+                  >
+                    <span>All Products</span>
+                    <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold">
+                      {products.length}
+                    </span>
+                  </button>
+
+                  {categories.map((cat) => {
+                    const count = products.filter(
+                      (p) => p.category && p.category.toLowerCase() === cat.name.toLowerCase()
+                    ).length;
+                    return (
+                      <button
+                        key={cat._id}
+                        onClick={() => {
+                          setSelectedCategory(cat);
+                          setIsFilterOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs flex justify-between items-center transition ${
+                          selectedCategory?._id === cat._id
+                            ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                            : "bg-zinc-50 dark:bg-zinc-900 border border-transparent text-zinc-700 dark:text-zinc-300"
+                        }`}
+                      >
+                        <span className="truncate">{cat.name}</span>
+                        <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold">
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsFilterOpen(false)}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-3 rounded-xl shadow-lg shadow-emerald-600/20 text-xs mt-4 cursor-pointer"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Live Products Section */}
         <section id="products-section" className="py-4 border-t border-emerald-50 dark:border-zinc-900">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-black dark:text-white font-extrabold text-xl md:text-2xl">
+              <h3 className="text-black dark:text-white font-extrabold text-lg md:text-2xl capitalize">
                 {selectedCategory ? `${selectedCategory.name} Products` : "All Products"}
               </h3>
               <p className="text-[11px] md:text-xs text-zinc-600 dark:text-zinc-400 font-medium">
@@ -295,7 +382,7 @@ export default function Home() {
             {selectedCategory && (
               <button
                 onClick={() => setSelectedCategory(null)}
-                className="btn btn-ghost btn-xs text-emerald-700 hover:bg-emerald-50 font-bold"
+                className="btn btn-ghost btn-xs text-emerald-700 hover:bg-emerald-50 font-bold cursor-pointer"
               >
                 Clear Filter
               </button>
@@ -317,13 +404,14 @@ export default function Home() {
               </p>
             </div>
           ) : (
+            /* Perfectly responsive 2 columns grid on small screens, scaling up to 5 on large screens */
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
               {filteredProducts.map((product) => {
                 const isOutOfStock = product.stock !== undefined && product.stock <= 0;
                 return (
                   <div
                     key={product._id}
-                    className="p-3.5 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm rounded-2xl border border-emerald-100/60 dark:border-zinc-800 flex flex-col justify-between hover:border-emerald-500 hover:shadow-lg transition-all duration-300 group hover:-translate-y-0.5"
+                    className="p-3 bg-white dark:bg-zinc-900 rounded-2xl border border-emerald-100/60 dark:border-zinc-800 flex flex-col justify-between hover:border-emerald-500 hover:shadow-lg transition-all duration-300 group"
                   >
                     <Link href={`/products/${product._id}`} className="flex flex-col gap-2">
                       <div className="relative aspect-square w-full rounded-xl bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center overflow-hidden border border-emerald-50/30">
@@ -339,12 +427,12 @@ export default function Home() {
                             }}
                           />
                         ) : (
-                          <MdMedication className="w-12 h-12 text-emerald-600/40" />
+                          <MdMedication className="w-10 h-10 text-emerald-600/40" />
                         )}
 
                         {isOutOfStock ? (
                           <span className="absolute top-1.5 right-1.5 bg-rose-600 text-white text-[8px] md:text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow flex items-center gap-1">
-                            <MdBlock className="w-2.5 h-2.5" /> Out of Stock
+                            <MdBlock className="w-2.5 h-2.5" /> Out
                           </span>
                         ) : product.category ? (
                           <span className="absolute top-1.5 right-1.5 bg-emerald-600 text-white text-[8px] md:text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow">
@@ -353,31 +441,31 @@ export default function Home() {
                         ) : null}
                       </div>
 
-                      <div className="mt-1 space-y-0.5">
-                        <p className="font-bold text-xs md:text-sm text-zinc-900 dark:text-zinc-100 leading-tight truncate group-hover:text-emerald-600 transition">
+                      <div className="mt-0.5 space-y-0.5">
+                        <p className="font-extrabold text-xs md:text-sm text-zinc-900 dark:text-zinc-100 leading-tight truncate group-hover:text-emerald-600 transition">
                           {product.name}
                         </p>
                         {product.genericName && (
-                          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold truncate">
+                          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold truncate leading-none">
                             {product.genericName}
                           </p>
                         )}
                         {product.brand && (
-                          <p className="text-[9px] text-zinc-400 dark:text-zinc-500 truncate">
-                            Brand: {product.brand}
+                          <p className="text-[9px] md:text-[10px] text-zinc-400 dark:text-zinc-500 truncate leading-none">
+                            {product.brand}
                           </p>
                         )}
                       </div>
                     </Link>
 
-                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                      <div>
+                    <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-zinc-100 dark:border-zinc-800 gap-1">
+                      <div className="min-w-0">
                         {product.unit && (
-                          <span className="text-[8px] md:text-[9px] text-zinc-400 block font-medium">
+                          <span className="text-[8px] md:text-[9px] text-zinc-400 block font-medium truncate">
                             {product.unit}
                           </span>
                         )}
-                        <span className="text-xs md:text-sm font-black text-emerald-600 dark:text-emerald-400">
+                        <span className="text-xs md:text-sm font-black text-emerald-600 dark:text-emerald-400 block truncate">
                           ৳{Number(product.price || 0).toFixed(2)}
                         </span>
                       </div>
@@ -389,13 +477,13 @@ export default function Home() {
                           }
                         }}
                         disabled={isOutOfStock}
-                        className={`text-[10px] md:text-xs font-extrabold px-3 py-1.5 rounded-xl transition-all shadow-sm ${
+                        className={`text-[10px] md:text-xs font-extrabold px-2.5 py-1.5 rounded-xl transition-all shadow-sm shrink-0 cursor-pointer ${
                           isOutOfStock
                             ? "bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed border border-slate-300 dark:border-slate-700"
                             : "bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white"
                         }`}
                       >
-                        {isOutOfStock ? "Out of Stock" : "Add"}
+                        {isOutOfStock ? "Out" : "Add"}
                       </button>
                     </div>
                   </div>
@@ -405,89 +493,6 @@ export default function Home() {
           )}
         </section>
       </main>
-
-      {/* Book Lab Test Modal */}
-      {isBookModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl max-w-md w-full p-5 md:p-6 shadow-xl border border-emerald-100/30 dark:border-zinc-800">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-lg md:text-xl text-zinc-800 dark:text-zinc-100 flex items-center gap-2">
-                <FaFlask className="text-emerald-600" />
-                Book a Home Lab Test
-              </h3>
-              <button
-                onClick={() => setIsBookModalOpen(false)}
-                className="btn btn-sm btn-circle btn-ghost"
-              >
-                <MdClose size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleBookSubmit} className="space-y-3.5">
-              <div>
-                <label className="label text-xs font-bold text-zinc-500 py-1">
-                  Full Name
-                </label>
-                <input
-                  required
-                  type="text"
-                  className="input input-bordered w-full rounded-xl bg-zinc-50 dark:bg-zinc-800 border-emerald-100 dark:border-zinc-700 h-10 text-sm"
-                  placeholder="Enter your name"
-                />
-              </div>
-              <div>
-                <label className="label text-xs font-bold text-zinc-500 py-1">
-                  Phone Number
-                </label>
-                <input
-                  required
-                  type="tel"
-                  className="input input-bordered w-full rounded-xl bg-zinc-50 dark:bg-zinc-800 border-emerald-100 dark:border-zinc-700 h-10 text-sm"
-                  placeholder="Enter phone number"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl mt-3.5 py-2.5 transition-all text-sm"
-              >
-                Confirm Booking Request
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-1.5 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-t border-emerald-100/30 dark:border-zinc-900 z-50 rounded-t-2xl">
-        {[
-          { name: "home", label: "Home", icon: <MdHome size={22} /> },
-          { name: "categories", label: "Categories", icon: <MdGridView size={22} /> },
-          { name: "orders", label: "Orders", icon: <MdReceiptLong size={22} /> },
-          { name: "inbox", label: "Inbox", icon: <MdMail size={22} /> },
-          { name: "more", label: "More", icon: <MdMenu size={22} /> },
-        ].map((tab) => (
-          <button
-            key={tab.name}
-            onClick={() => {
-              setActiveTab(tab.name);
-              if (tab.name === "home") {
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              } else if (tab.name === "categories") {
-                window.location.href = "/categories";
-              }
-            }}
-            className={`flex flex-col items-center justify-center p-1.5 rounded-xl transition-all duration-300 min-w-[56px] ${
-              activeTab === tab.name
-                ? "bg-emerald-600/10 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-350 scale-105 font-bold"
-                : "text-emerald-800/80 dark:text-emerald-400/80 hover:text-emerald-900 hover:bg-emerald-50/50"
-            }`}
-          >
-            {tab.icon}
-            <span className="font-label-md text-[9px] font-semibold mt-0.5">
-              {tab.label}
-            </span>
-          </button>
-        ))}
-      </nav>
     </div>
   );
 }
