@@ -11,6 +11,8 @@ import {
   MdShoppingBag,
   MdPerson,
   MdVerified,
+  MdMenu,
+  MdClose,
 } from "react-icons/md";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useCart } from "@/context/CartContext";
@@ -19,16 +21,22 @@ export default function Navbar() {
   const { totalCount } = useCart();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   const dropdownRef = useRef(null);
+  const mobileMenuRef = useRef(null);
 
   const { data: session, isPending } = useSession();
   const user = session?.user;
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setIsMobileMenuOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -221,12 +229,47 @@ export default function Navbar() {
         ) : (
           /* Logged Out Buttons */
           <>
-            <Link href="/login">
-              <Button variant="ghost">Login</Button>
-            </Link>
-            <Link href="/signup">
-              <Button variant="ghost">Sign Up</Button>
-            </Link>
+            {/* Desktop View: Clean Login & Signup buttons */}
+            <div className="hidden md:flex items-center gap-2">
+              <Link href="/login">
+                <Button variant="light" className="font-extrabold text-sm text-emerald-800 hover:bg-emerald-100/40 cursor-pointer">Login</Button>
+              </Link>
+              <Link href="/signup">
+                <Button className="font-extrabold text-sm bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm px-4 py-2 cursor-pointer border-none">Sign Up</Button>
+              </Link>
+            </div>
+
+            {/* Mobile View: Hamburger Menu for Guest Options */}
+            <div className="relative md:hidden" ref={mobileMenuRef}>
+              <button
+                onClick={() => setIsMobileMenuOpen((v) => !v)}
+                className="btn btn-ghost btn-circle btn-sm flex items-center justify-center hover:bg-emerald-100/50 text-emerald-800 cursor-pointer"
+                title="Open menu"
+              >
+                {isMobileMenuOpen ? <MdClose size={20} /> : <MdMenu size={20} />}
+              </button>
+
+              {isMobileMenuOpen && (
+                <div className="absolute right-0 mt-2.5 w-44 bg-white rounded-2xl shadow-xl border border-emerald-100/90 p-1.5 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-0.5">
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
+                  >
+                    <MdPerson className="text-emerald-600 text-base" />
+                    <span>Login</span>
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
+                  >
+                    <MdPerson className="text-emerald-600 text-base" />
+                    <span>Sign Up</span>
+                  </Link>
+                </div>
+              )}
+            </div>
           </>
         )}
 

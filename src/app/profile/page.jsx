@@ -379,9 +379,10 @@ export default function ProfilePage() {
                   if (s === "processing") return 1;
                   if (s === "shipped") return 2;
                   if (s === "delivered") return 3;
-                  return 0;
+                  return 0; // pending, cancelled, or default
                 };
-                const currentStep = getStatusStep(order.orderStatus);
+                const currentStatus = order.status || order.orderStatus || "Pending";
+                const currentStep = getStatusStep(currentStatus);
 
                 return (
                   <div key={order._id} className="pt-6 first:pt-0 space-y-4">
@@ -443,7 +444,7 @@ export default function ProfilePage() {
                     </div>
 
                     {/* Order Progress Stepper Bar */}
-                    <div className="pt-2 pb-4 px-2">
+                    <div className="pt-2 pb-4 px-1.5 sm:px-4">
                       <div className="flex items-center justify-between w-full relative">
                         {/* Stepper bar background lines */}
                         <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-100 -translate-y-1/2 z-0" />
@@ -456,9 +457,9 @@ export default function ProfilePage() {
                           const isCompleted = idx <= currentStep;
                           const isActive = idx === currentStep;
                           return (
-                            <div key={step} className="flex flex-col items-center z-10 relative">
+                            <div key={step} className="flex flex-col items-center z-10 relative flex-1 text-center min-w-0">
                               <div
-                                className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${
+                                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-black transition-all shrink-0 ${
                                   isCompleted
                                     ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25"
                                     : "bg-slate-200 text-slate-500"
@@ -467,8 +468,8 @@ export default function ProfilePage() {
                                 {idx + 1}
                               </div>
                               <span
-                                className={`text-[9px] font-extrabold mt-1.5 ${
-                                  isCompleted ? "text-emerald-700 font-black" : "text-slate-400"
+                                className={`text-[8px] sm:text-[10px] font-black mt-1.5 leading-tight max-w-[55px] sm:max-w-none break-words ${
+                                  isCompleted ? "text-emerald-700" : "text-slate-400"
                                 }`}
                               >
                                 {step}
