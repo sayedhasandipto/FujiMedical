@@ -12,9 +12,11 @@ import {
   MdVerified,
 } from "react-icons/md";
 import { useSession, signOut } from "@/lib/auth-client";
+import { useCart } from "@/context/CartContext";
+import CartDrawer from "./CartDrawer";
 
 export default function Navbar() {
-  const [cartCount, setCartCount] = useState(0);
+  const { totalCount, setIsCartOpen } = useCart();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -56,6 +58,19 @@ export default function Navbar() {
           </div>
         </div>
       </Link>
+
+      {/* Main Navigation Links */}
+      <nav className="hidden md:flex items-center gap-6 text-sm font-extrabold text-emerald-900">
+        <Link href="/" className="hover:text-emerald-600 transition">
+          Home
+        </Link>
+        <Link href="/categories" className="hover:text-emerald-600 transition flex items-center gap-1">
+          <span>Categories</span>
+        </Link>
+        <Link href="/admin/products" className="hover:text-emerald-600 transition text-emerald-700 font-black">
+          Admin Dashboard
+        </Link>
+      </nav>
 
       <div className="flex items-center gap-2 md:gap-3">
         {isPending ? (
@@ -146,10 +161,21 @@ export default function Navbar() {
                     <span>My Profile</span>
                   </Link>
 
+                  {user?.role === "admin" && (
+                    <Link
+                      href="/admin/products"
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-emerald-800 bg-emerald-100/60 hover:bg-emerald-200/80 rounded-xl transition-all border border-emerald-200"
+                    >
+                      <MdVerified className="text-emerald-600 text-base" />
+                      <span>Admin Dashboard</span>
+                    </Link>
+                  )}
+
                   <button
                     onClick={() => {
                       setIsDropdownOpen(false);
-                      setCartCount((c) => c + 1);
+                      setIsCartOpen(true);
                     }}
                     className="w-full flex items-center justify-between px-3 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all cursor-pointer"
                   >
@@ -157,9 +183,9 @@ export default function Navbar() {
                       <MdShoppingBag className="text-emerald-600 text-base" />
                       <span>My Cart Items</span>
                     </div>
-                    {cartCount > 0 && (
+                    {totalCount > 0 && (
                       <span className="bg-emerald-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                        {cartCount}
+                        {totalCount}
                       </span>
                     )}
                   </button>
@@ -194,22 +220,25 @@ export default function Navbar() {
 
         {/* Cart Button */}
         <button
-          onClick={() => setCartCount(cartCount + 1)}
+          onClick={() => setIsCartOpen(true)}
           className="btn btn-ghost btn-circle btn-sm relative hover:bg-emerald-100/50 group transition-all duration-300 text-emerald-800"
+          title="Open Shopping Cart"
         >
           <div className="indicator">
             <MdShoppingCart
               size={20}
               className="md:w-[24px] md:h-[24px] group-hover:scale-110 transition-transform"
             />
-            {cartCount > 0 && (
-              <span className="badge badge-sm badge-error indicator-item font-bold text-white scale-90">
-                {cartCount}
+            {totalCount > 0 && (
+              <span className="badge badge-sm badge-error indicator-item font-bold text-white scale-90 bg-rose-600 border-none">
+                {totalCount}
               </span>
             )}
           </div>
         </button>
       </div>
+
+      <CartDrawer />
     </header>
   );
 }

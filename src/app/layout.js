@@ -1,6 +1,7 @@
 import Navbar from "@/component/Navbar";
 import "./globals.css";
 import Footer from "@/component/Footer";
+import { CartProvider } from "@/context/CartContext";
 
 export const metadata = {
   title: "Fuji Medical Hall - Home",
@@ -15,9 +16,11 @@ export default function RootLayout({ children }) {
         className="min-h-full flex flex-col bg-gradient-to-b from-emerald-200 via-emerald-50 to-white bg-fixed dark:from-emerald-950/60 dark:via-zinc-950 dark:to-zinc-950 text-zinc-800 dark:text-zinc-100"
         suppressHydrationWarning={true}
       >
-        <Navbar />
-        {children}
-        <Footer />
+        <CartProvider>
+          <Navbar />
+          {children}
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );
