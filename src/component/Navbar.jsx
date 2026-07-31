@@ -68,9 +68,11 @@ export default function Navbar() {
         <Link href="/categories" className="hover:text-emerald-600 transition flex items-center gap-1">
           <span>Categories</span>
         </Link>
-        <Link href="/admin/products" className="hover:text-emerald-600 transition text-emerald-700 font-black">
-          Admin Dashboard
-        </Link>
+        {user && user.role === "admin" && (
+          <Link href="/admin/products" className="hover:text-emerald-600 transition text-emerald-700 font-black">
+            Admin Dashboard
+          </Link>
+        )}
       </nav>
 
       <div className="flex items-center gap-2 md:gap-3">

@@ -29,36 +29,11 @@ export default async function AdminLayout({ children }) {
 
   // Access Security Safeguard
   if (!user) {
-    redirect("/login?callbackUrl=/admin/products");
+    redirect("/login?redirectTo=/admin/products");
   }
 
   if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-slate-900 border border-red-500/30 rounded-2xl p-8 text-center shadow-2xl space-y-6">
-          <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto border border-red-500/20">
-            <FiAlertTriangle className="w-8 h-8" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-white mb-2">Access Restricted</h1>
-            <p className="text-slate-400 text-sm">
-              Your account (<span className="text-slate-200 font-medium">{user.email}</span>) does not have <span className="text-red-400 font-semibold">ADMIN</span> privileges required to access the Admin Panel.
-            </p>
-          </div>
-          <div className="bg-slate-800/60 rounded-xl p-4 text-xs text-slate-400 border border-slate-700/50">
-            Current Role: <span className="text-emerald-400 uppercase font-mono px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">{user.role || "user"}</span>
-          </div>
-          <div className="flex flex-col gap-3">
-            <Link
-              href="/"
-              className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
-            >
-              <FiHome /> Back to Storefront
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
+    redirect("/");
   }
 
   return (

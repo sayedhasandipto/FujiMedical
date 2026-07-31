@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -15,10 +15,25 @@ import {
   MdLocalShipping,
   MdShoppingBag,
 } from "react-icons/md";
+import { useSession } from "@/lib/auth-client";
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, subtotal, totalCount, isMounted } = useCart();
   const router = useRouter();
+  const { data: session } = useSession();
+  const [showAuthWarning, setShowAuthWarning] = useState(false);
+
+  const handleCheckoutClick = () => {
+    if (!session?.user) {
+      setShowAuthWarning(true);
+      setTimeout(() => {
+        setShowAuthWarning(false);
+        router.push("/login?redirectTo=/checkout");
+      }, 1500);
+    } else {
+      router.push("/checkout");
+    }
+  };
 
   if (!isMounted) {
     return (
@@ -53,7 +68,24 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 relative">
+      {/* Auth Warning Overlay */}
+      {showAuthWarning && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-6 z-[100] animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl max-w-sm w-full text-center space-y-4 transform scale-100 transition-all duration-300">
+            <div className="w-14 h-14 bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center rounded-2xl mx-auto border border-amber-500/20">
+              <svg className="w-8 h-8 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m0-8v6m0-6a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-black text-slate-900 dark:text-white">Authentication Required</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
+              You need to be logged in to proceed. Redirecting to login...
+            </p>
+            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          </div>
+        </div>
+      )}
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-emerald-700 to-teal-600 text-white py-8 px-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -217,7 +249,7 @@ export default function CartPage() {
               {/* Checkout Button */}
               <Button
                 size="lg"
-                onClick={() => router.push("/checkout")}
+                onClick={handleCheckoutClick}
                 className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/20"
               >
                 <span>Proceed to Checkout</span>
