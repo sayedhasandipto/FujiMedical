@@ -30,10 +30,15 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   
+  // Suggestion overlay states
+  const [allProducts, setAllProducts] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
   // Prescription Upload Modal State
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
   const [prescriptionFile, setPrescriptionFile] = useState(null);
@@ -42,15 +47,54 @@ export default function Navbar() {
 
   const dropdownRef = useRef(null);
   const drawerRef = useRef(null);
+  const suggestionRef = useRef(null);
+  const mobileSuggestionRef = useRef(null);
 
   const { data: session, isPending } = useSession();
   const user = session?.user;
 
-  // Close dropdowns on outside click
+  // Load products list for client-side live search suggest
+  useEffect(() => {
+    async function loadSearchSuggestions() {
+      try {
+        const res = await fetch("/api/products");
+        if (res.ok) {
+          const json = await res.json();
+          // The API response might have products wrapped inside products object
+          const data = json.products || json.data || json || [];
+          setAllProducts(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.warn("Failed to load products for live suggestions:", err);
+      }
+    }
+    loadSearchSuggestions();
+  }, []);
+
+  // Filter suggestions dynamically
+  useEffect(() => {
+    if (searchTerm.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    const query = searchTerm.toLowerCase();
+    const filtered = allProducts.filter(
+      (p) =>
+        (p.name && p.name.toLowerCase().includes(query)) ||
+        (p.brand && p.brand.toLowerCase().includes(query)) ||
+        (p.genericName && p.genericName.toLowerCase().includes(query))
+    );
+    setSuggestions(filtered.slice(0, 5));
+  }, [searchTerm, allProducts]);
+
+  // Close dropdowns & live search overlays on outside click
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
+      }
+      if (suggestionRef.current && !suggestionRef.current.contains(event.target)) {
+        setShowSuggestions(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -75,10 +119,10 @@ export default function Navbar() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/?search=${encodeURIComponent(searchQuery.trim())}`);
-      setIsMobileDrawerOpen(false);
-    }
+    if (!searchTerm.trim()) return;
+    router.push(`/?search=${encodeURIComponent(searchTerm.trim())}`);
+    setIsMobileDrawerOpen(false);
+    setShowSuggestions(false);
   };
 
   const handlePrescriptionSubmit = (e) => {
@@ -104,7 +148,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="bg-white/95 backdrop-blur-md w-full top-0 sticky z-40 border-b border-emerald-100 shadow-sm transition-all">
+      <header className="bg-white/95 backdrop-blur-md w-full top-0 sticky z-45 border-b border-emerald-100 shadow-sm transition-all">
         {/* ── Top Header Row ── */}
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2 md:gap-4">
           
@@ -124,25 +168,72 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop & Tablet Global Search Input (Center - md & lg) */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="hidden md:flex flex-1 max-w-md mx-2 lg:mx-6 relative"
-          >
-            <MdSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search medicines, syrup, healthcare products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 hover:bg-slate-100/70 border border-emerald-200/80 focus:border-emerald-500 rounded-full pl-10 pr-20 py-2 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-inner"
-            />
-            <button
-              type="submit"
-              className="absolute right-1 top-1/2 -translate-y-1/2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-extrabold px-3 py-1.5 rounded-full transition-all shadow-sm cursor-pointer"
+          <div className="hidden md:block flex-1 max-w-md mx-2 lg:mx-6 relative" ref={suggestionRef}>
+            <form
+              onSubmit={handleSearchSubmit}
+              className="relative w-full"
             >
-              Search
-            </button>
-          </form>
+              <button
+                type="submit"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer flex items-center justify-center"
+                title="Search button"
+              >
+                <MdSearch className="text-lg" />
+              </button>
+              <input
+                type="text"
+                placeholder="Search medicines, syrup, healthcare products..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                className="w-full bg-slate-50 hover:bg-slate-100/70 border border-emerald-200/80 focus:border-emerald-500 rounded-full pl-10 pr-20 py-2 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-inner"
+              />
+              <button
+                type="submit"
+                className="absolute right-1 top-1/2 -translate-y-1/2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-extrabold px-3 py-1.5 rounded-full transition-all shadow-sm cursor-pointer"
+              >
+                Search
+              </button>
+            </form>
+
+            {/* Desktop Autocomplete Suggestions Dropdown Overlay */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute left-0 right-0 mt-2 bg-white border border-emerald-100 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-150">
+                {suggestions.map((product) => {
+                  const imageSrc = product.image || `https://placehold.co/48x48/10b981/ffffff?text=${encodeURIComponent(product.name ? product.name.slice(0,2) : "M")}`;
+                  return (
+                    <Link
+                      key={product._id}
+                      href={`/products/${product._id}`}
+                      onClick={() => {
+                        setShowSuggestions(false);
+                        setSearchTerm("");
+                      }}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-50/50 transition-colors"
+                    >
+                      <img
+                        src={imageSrc}
+                        alt={product.name}
+                        className="w-8 h-8 rounded-lg object-cover border border-slate-150 shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-slate-800 truncate">{product.name}</p>
+                        {product.genericName && (
+                          <p className="text-[10px] text-emerald-600 truncate mt-0.5">{product.genericName}</p>
+                        )}
+                      </div>
+                      <span className="text-xs font-black text-slate-900 shrink-0">
+                        ৳{Number(product.price || 0).toFixed(2)}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Desktop Nav Links + Actions (Right) */}
           <div className="flex items-center gap-2 sm:gap-3">
@@ -333,14 +424,24 @@ export default function Navbar() {
         </div>
 
         {/* ── Compact Mobile Search Bar (Directly below header - < md) ── */}
-        <div className="block md:hidden bg-emerald-50/50 border-t border-emerald-100/60 px-3 py-2">
+        <div className="block md:hidden bg-emerald-50/50 border-t border-emerald-100/60 px-3 py-2 relative">
           <form onSubmit={handleSearchSubmit} className="relative w-full">
-            <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none" />
+            <button
+              type="submit"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer flex items-center justify-center"
+              title="Search button"
+            >
+              <MdSearch className="text-base" />
+            </button>
             <input
               type="text"
               placeholder="Search medicines, syrup, products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
               className="w-full bg-white border border-emerald-200/90 rounded-full pl-9 pr-16 py-1.5 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-xs"
             />
             <button
@@ -350,6 +451,38 @@ export default function Navbar() {
               Search
             </button>
           </form>
+
+          {/* Mobile Autocomplete Suggestions Dropdown Overlay */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute left-3 right-3 mt-1.5 bg-white border border-emerald-100 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-150">
+              {suggestions.map((product) => {
+                const imageSrc = product.image || `https://placehold.co/48x48/10b981/ffffff?text=${encodeURIComponent(product.name ? product.name.slice(0,2) : "M")}`;
+                return (
+                  <Link
+                    key={product._id}
+                    href={`/products/${product._id}`}
+                    onClick={() => {
+                      setShowSuggestions(false);
+                      setSearchTerm("");
+                    }}
+                    className="flex items-center gap-3 px-3 py-2 hover:bg-emerald-50/50 transition-colors"
+                  >
+                    <img
+                      src={imageSrc}
+                      alt={product.name}
+                      className="w-7 h-7 rounded-lg object-cover border border-slate-150 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-bold text-slate-800 truncate">{product.name}</p>
+                    </div>
+                    <span className="text-[11px] font-black text-slate-900 shrink-0">
+                      ৳{Number(product.price || 0).toFixed(2)}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </header>
 
