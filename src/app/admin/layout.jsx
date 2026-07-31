@@ -2,13 +2,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  FiBox,
-  FiGrid,
-  FiHome,
-  FiShield,
-  FiClipboard,
-} from "react-icons/fi";
+import { FiHome, FiShield } from "react-icons/fi";
+import AdminSidebarNav from "@/component/AdminSidebarNav";
 
 export const metadata = {
   title: "Admin Dashboard | FujiMedical",
@@ -44,35 +39,7 @@ export default async function AdminLayout({ children }) {
           </div>
 
           {/* Nav */}
-          <nav className="p-3 space-y-0.5">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 pt-3 pb-1.5">
-              Management
-            </p>
-
-            <Link
-              href="/admin/products"
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all font-semibold text-sm group"
-            >
-              <FiBox className="w-4 h-4 group-hover:text-emerald-400 transition" />
-              Products
-            </Link>
-
-            <Link
-              href="/admin/orders"
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all font-semibold text-sm group"
-            >
-              <FiClipboard className="w-4 h-4 group-hover:text-emerald-400 transition" />
-              Orders
-            </Link>
-
-            <Link
-              href="/admin/categories"
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all font-semibold text-sm group"
-            >
-              <FiGrid className="w-4 h-4 group-hover:text-emerald-400 transition" />
-              Categories
-            </Link>
-          </nav>
+          <AdminSidebarNav />
         </div>
 
         {/* User + storefront */}
