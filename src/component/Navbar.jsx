@@ -143,7 +143,7 @@ export default function Navbar() {
   const navLinks = [
     { name: "Home", href: "/", icon: MdHome },
     { name: "Categories", href: "/categories", icon: MdCategory },
-    { name: "My Orders", href: "/profile#orders", icon: MdReceiptLong },
+    { name: "Track Order", href: "/track-order", icon: MdReceiptLong },
   ];
 
   return (

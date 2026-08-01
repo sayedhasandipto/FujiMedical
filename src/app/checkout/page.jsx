@@ -22,8 +22,6 @@ import Link from "next/link";
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, subtotal, clearCart, isMounted } = useCart();
-  const { data: session } = useSession();
-  const user = session?.user;
 
   const [form, setForm] = useState({
     customerName: "",
@@ -33,6 +31,9 @@ export default function CheckoutPage() {
     notes: "",
   });
 
+  const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
+  const [bKashPhone, setBKashPhone] = useState("");
+  const [bKashTxnId, setBKashTxnId] = useState("");
   const [shippingFee, setShippingFee] = useState(60);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -52,6 +53,11 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (paymentMethod === "bKash" && (!bKashPhone.trim() || !bKashTxnId.trim())) {
+      setErrorMsg("Please provide your bKash Mobile Number and Transaction ID.");
+      return;
+    }
+
     if (cart.length === 0) {
       setErrorMsg("Your cart is empty. Please add items to checkout.");
       return;
@@ -66,9 +72,8 @@ export default function CheckoutPage() {
       subtotal,
       shippingFee,
       totalAmount,
-      paymentMethod: "Cash on Delivery (COD)",
-      email: user?.email || "",
-      userId: user?.id || "",
+      paymentMethod: paymentMethod === "bKash" ? `bKash (Phone: ${bKashPhone.trim()}, TxnID: ${bKashTxnId.trim()})` : "Cash on Delivery",
+      email: "",
     };
 
     const res = await createOrder(orderPayload);
@@ -127,7 +132,7 @@ export default function CheckoutPage() {
             <div className="flex justify-between">
               <span className="text-slate-500">Payment:</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                Cash on Delivery (৳{completedOrder.totalAmount?.toFixed(2)})
+                {completedOrder.paymentMethod} (৳{completedOrder.totalAmount?.toFixed(2)})
               </span>
             </div>
           </div>
@@ -368,25 +373,94 @@ export default function CheckoutPage() {
 
               {/* Payment Method Option */}
               <div className="pt-2">
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                  Payment Method
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2.5">
+                  Payment Method *
                 </label>
-                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <MdPayments className="w-6 h-6 text-emerald-600" />
-                    <div>
-                      <p className="text-sm font-extrabold text-slate-900 dark:text-white">
-                        Cash on Delivery (COD)
-                      </p>
-                      <p className="text-[11px] text-slate-500">
-                        Pay cash when your package arrives at your doorstep.
-                      </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("Cash on Delivery")}
+                    style={{
+                      padding: "16px",
+                      borderRadius: "16px",
+                      border: paymentMethod === "Cash on Delivery" ? "2px solid #16a34a" : "1.5px solid #d1d5db",
+                      backgroundColor: paymentMethod === "Cash on Delivery" ? "#f0fdf4" : "#ffffff",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <p style={{fontSize: "12px", fontWeight: "800", color: paymentMethod === "Cash on Delivery" ? "#15803d" : "#374151"}}>Cash on Delivery</p>
+                    <p style={{fontSize: "11px", color: "#6b7280", marginTop: "4px"}}>Pay cash at your doorstep</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("bKash")}
+                    style={{
+                      padding: "16px",
+                      borderRadius: "16px",
+                      border: paymentMethod === "bKash" ? "2px solid #d946ef" : "1.5px solid #d1d5db",
+                      backgroundColor: paymentMethod === "bKash" ? "#fdf4ff" : "#ffffff",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <p style={{fontSize: "12px", fontWeight: "800", color: paymentMethod === "bKash" ? "#a21caf" : "#374151"}}>bKash Mobile Banking</p>
+                    <p style={{fontSize: "11px", color: "#6b7280", marginTop: "4px"}}>Send money to 01700000000</p>
+                  </button>
+                </div>
+
+                {paymentMethod === "bKash" && (
+                  <div className="mt-4 p-4 rounded-2xl bg-fuchsia-50/50 border border-fuchsia-200 space-y-4 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="text-xs text-fuchsia-800">
+                      <p className="font-bold">Instructions:</p>
+                      <p className="mt-1">Please Send Money ৳{totalAmount.toFixed(2)} to our Merchant Account: <strong>01700000000</strong>. Then enter your bKash mobile number and the Transaction ID below.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 mb-1">bKash Number</label>
+                        <input
+                          type="tel"
+                          placeholder="017xxxxxxxx"
+                          value={bKashPhone}
+                          onChange={(e) => setBKashPhone(e.target.value)}
+                          style={{
+                            width: "100%",
+                            backgroundColor: "#ffffff",
+                            border: "1.5px solid #d1d5db",
+                            borderRadius: "10px",
+                            padding: "8px 12px",
+                            fontSize: "13px",
+                            color: "#0f172a",
+                            outline: "none",
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 mb-1">Transaction ID (TxnID)</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. BKA87K2J4"
+                          value={bKashTxnId}
+                          onChange={(e) => setBKashTxnId(e.target.value)}
+                          style={{
+                            width: "100%",
+                            backgroundColor: "#ffffff",
+                            border: "1.5px solid #d1d5db",
+                            borderRadius: "10px",
+                            padding: "8px 12px",
+                            fontSize: "13px",
+                            color: "#0f172a",
+                            outline: "none",
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-emerald-600 bg-white dark:bg-slate-900 px-2.5 py-1 rounded-full border border-emerald-200">
-                    Selected
-                  </span>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -465,7 +539,7 @@ export default function CheckoutPage() {
                 className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/20"
               >
                 <MdCheckCircle className="w-5 h-5 mr-1" />
-                <span>Confirm Order (Cash on Delivery)</span>
+                <span>Confirm Order ({paymentMethod})</span>
               </Button>
             </div>
           </div>

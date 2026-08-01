@@ -3,9 +3,10 @@ import { NextResponse } from "next/server";
 export async function middleware(request) {
   const { pathname, origin } = request.nextUrl;
 
-  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
-  // Routes that require authentication
-  const protectedRoutes = ["/checkout", "/profile", "/orders"];
+  // Exclude /admin/login from admin protection to prevent loops
+  const isAdminRoute = (pathname === "/admin" || pathname.startsWith("/admin/")) && pathname !== "/admin/login";
+  // Routes that require authentication (removed /checkout for guest checkout)
+  const protectedRoutes = ["/profile", "/orders"];
 
   const isProtected = protectedRoutes.some((route) =>
     pathname === route || pathname.startsWith(`${route}/`)
@@ -27,6 +28,9 @@ export async function middleware(request) {
 
       // BetterAuth returns null or an object without session if unauthenticated
       if (!session || !session.session) {
+        if (isAdminRoute) {
+          return NextResponse.redirect(new URL("/admin/login", origin));
+        }
         const loginUrl = new URL("/login", origin);
         loginUrl.searchParams.set("redirectTo", pathname);
         return NextResponse.redirect(loginUrl);
@@ -38,6 +42,9 @@ export async function middleware(request) {
       }
     } catch (error) {
       console.error("Middleware authentication check failed:", error);
+      if (isAdminRoute) {
+        return NextResponse.redirect(new URL("/admin/login", origin));
+      }
       const loginUrl = new URL("/login", origin);
       loginUrl.searchParams.set("redirectTo", pathname);
       return NextResponse.redirect(loginUrl);
@@ -49,7 +56,6 @@ export async function middleware(request) {
 
 export const config = {
   matcher: [
-    "/checkout/:path*",
     "/profile/:path*",
     "/orders/:path*",
     "/admin/:path*",

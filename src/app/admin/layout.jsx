@@ -17,8 +17,7 @@ export default async function AdminLayout({ children }) {
   const user = session?.user;
   const isAdmin = user && user.role === "admin";
 
-  if (!user) redirect("/login?redirectTo=/admin/products");
-  if (!isAdmin) redirect("/");
+  if (!user || !isAdmin) redirect("/admin/login");
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">

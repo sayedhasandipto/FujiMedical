@@ -98,6 +98,9 @@ const Footer = () => {
                 <Link href="/cart" className="hover:text-white transition-colors">My Cart</Link>
               </li>
               <li>
+                <Link href="/track-order" className="hover:text-white transition-colors">Track Order</Link>
+              </li>
+              <li>
                 <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
               </li>
               <li>

@@ -19,7 +19,6 @@ export async function createOrder(orderData) {
       totalAmount,
       paymentMethod = "Cash on Delivery",
       email = "",
-      userId = "",
     } = orderData;
 
     if (!customerName || !phone || !address) {
@@ -33,12 +32,12 @@ export async function createOrder(orderData) {
     const orderObj = {
       orderId: `FM-${Date.now().toString().slice(-6)}`,
       customerName: customerName.trim(),
-      phone: phone.trim(),
+      customerPhone: phone.trim(),
+      phone: phone.trim(), // Keep phone for compatibility/admin UI
       address: address.trim(),
       deliveryArea: deliveryArea || "Inside Dhaka",
       notes: notes ? notes.trim() : "",
       email: email ? email.trim() : "",
-      userId: userId ? userId.trim() : "",
       items: cartItems.map((item) => ({
         productId: item._id,
         name: item.name,
@@ -51,7 +50,7 @@ export async function createOrder(orderData) {
       shippingFee: Number(shippingFee),
       totalAmount: Number(totalAmount),
       paymentMethod,
-      paymentStatus: "Unpaid (Cash on Delivery)",
+      paymentStatus: paymentMethod.includes("bKash") ? "Pending Verification (bKash)" : "Unpaid (Cash on Delivery)",
       orderStatus: "Pending",
       createdAt: new Date(),
     };
