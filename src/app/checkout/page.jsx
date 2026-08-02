@@ -16,7 +16,6 @@ import {
   MdNoteAlt,
   MdPayments,
 } from "react-icons/md";
-import { useSession } from "@/lib/auth-client";
 import Link from "next/link";
 
 export default function CheckoutPage() {

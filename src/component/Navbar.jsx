@@ -22,7 +22,6 @@ import {
   MdCheckCircle,
 } from "react-icons/md";
 import { FaPrescriptionBottleAlt, FaStethoscope } from "react-icons/fa";
-import { useSession, signOut } from "@/lib/auth-client";
 import { useCart } from "@/context/CartContext";
 
 export default function Navbar() {
@@ -50,8 +49,7 @@ export default function Navbar() {
   const suggestionRef = useRef(null);
   const mobileSuggestionRef = useRef(null);
 
-  const { data: session, isPending } = useSession();
-  const user = session?.user;
+
 
   // Load products list for client-side live search suggest
   useEffect(() => {
@@ -110,12 +108,7 @@ export default function Navbar() {
     }
   }, [isMobileDrawerOpen, isPrescriptionModalOpen]);
 
-  const handleSignOut = async () => {
-    setIsDropdownOpen(false);
-    setIsMobileDrawerOpen(false);
-    await signOut();
-    router.push("/");
-  };
+
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -257,14 +250,7 @@ export default function Navbar() {
                 );
               })}
 
-              {user?.role === "admin" && (
-                <Link
-                  href="/admin/products"
-                  className="px-3 py-1.5 rounded-full text-xs font-black text-emerald-800 bg-emerald-100 hover:bg-emerald-200 transition-all border border-emerald-200"
-                >
-                  Admin Panel
-                </Link>
-              )}
+
             </nav>
 
             {/* Upload Prescription Button (Desktop & Tablet) */}
@@ -292,125 +278,7 @@ export default function Navbar() {
             </Link>
 
             {/* Auth Buttons / Profile Dropdown (Desktop & Mobile) */}
-            {isPending ? (
-              <div className="w-8 h-8 rounded-full bg-emerald-100 animate-pulse" />
-            ) : user ? (
-              /* User Profile Dropdown Pill */
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setIsDropdownOpen((v) => !v)}
-                  className="group flex items-center gap-1.5 p-1 pr-2.5 bg-white hover:bg-emerald-50/50 border border-emerald-200 rounded-full shadow-xs hover:shadow transition-all duration-200 focus:outline-none cursor-pointer"
-                >
-                  {user.image ? (
-                    <img
-                      src={user.image}
-                      alt={user.name || "User Profile"}
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        e.target.style.display = "none";
-                        e.target.nextSibling.style.display = "flex";
-                      }}
-                      className="w-7 h-7 md:w-8 md:h-8 rounded-full object-cover shadow-xs"
-                    />
-                  ) : null}
-                  <div
-                    style={{ display: user.image ? "none" : "flex" }}
-                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black items-center justify-center text-xs md:text-sm uppercase shadow-xs shrink-0"
-                  >
-                    {(user.name
-                      ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2)
-                      : user.email?.[0] || "U"
-                    )}
-                  </div>
-                  <span className="text-xs font-black text-slate-800 max-w-[90px] truncate hidden sm:inline-block">
-                    {user.name?.split(" ")[0] || "Account"}
-                  </span>
-                  <MdKeyboardArrowDown
-                    className={`text-emerald-600 text-base transition-transform duration-200 ${
-                      isDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
 
-                {/* Dropdown Menu Popup */}
-                {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2.5 w-64 bg-white rounded-2xl shadow-xl border border-emerald-100 py-1.5 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-                    <div className="px-4 py-3 bg-emerald-50/40 border-b border-emerald-100/60 flex items-center gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1">
-                          <h4 className="text-xs font-black text-slate-900 truncate">
-                            {user.name || "User Account"}
-                          </h4>
-                          <MdVerified className="text-emerald-500 text-xs shrink-0" />
-                        </div>
-                        <p className="text-[11px] font-semibold text-slate-500 truncate mt-0.5">
-                          {user.email}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="p-1.5 flex flex-col gap-0.5">
-                      <Link
-                        href="/profile"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
-                      >
-                        <MdPerson className="text-emerald-600 text-base" />
-                        <span>My Profile</span>
-                      </Link>
-
-                      <Link
-                        href="/profile#orders"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
-                      >
-                        <MdReceiptLong className="text-emerald-600 text-base" />
-                        <span>My Orders</span>
-                      </Link>
-
-                      {user?.role === "admin" && (
-                        <Link
-                          href="/admin/products"
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-emerald-800 bg-emerald-100/60 hover:bg-emerald-200/80 rounded-xl transition-all border border-emerald-200"
-                        >
-                          <MdAdminPanelSettings className="text-emerald-600 text-base" />
-                          <span>Admin Dashboard</span>
-                        </Link>
-                      )}
-                    </div>
-
-                    <div className="border-t border-emerald-100/60 my-1" />
-
-                    <div className="p-1.5">
-                      <button
-                        onClick={handleSignOut}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
-                      >
-                        <MdLogout className="text-base text-rose-500" />
-                        <span>Sign Out</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* Guest Login / Signup Buttons (Desktop) */
-              <div className="hidden sm:flex items-center gap-1.5">
-                <Link
-                  href="/login"
-                  className="text-xs font-extrabold text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 px-3.5 py-1.5 rounded-full transition-all"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/signup"
-                  className="text-xs font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-full shadow-sm shadow-emerald-600/20 transition-all"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
 
             {/* Mobile Hamburger Toggle Button (< lg) */}
             <button
@@ -521,37 +389,9 @@ export default function Navbar() {
 
               {/* User State Header in Drawer */}
               <div className="p-4 bg-emerald-900 text-white space-y-3">
-                {user ? (
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-700 border-2 border-emerald-400 flex items-center justify-center font-black text-base uppercase shrink-0">
-                      {user.name ? user.name[0] : user.email[0]}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-black text-sm text-white truncate">{user.name || "User"}</p>
-                      <p className="text-xs text-emerald-200 truncate">{user.email}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-emerald-200">Welcome to Fuji Medical!</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Link
-                        href="/login"
-                        onClick={() => setIsMobileDrawerOpen(false)}
-                        className="py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-center text-xs font-bold rounded-xl shadow transition-all"
-                      >
-                        Login
-                      </Link>
-                      <Link
-                        href="/signup"
-                        onClick={() => setIsMobileDrawerOpen(false)}
-                        className="py-2 bg-white text-emerald-950 text-center text-xs font-bold rounded-xl shadow transition-all"
-                      >
-                        Sign Up
-                      </Link>
-                    </div>
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-emerald-200">Welcome to Fuji Medical!</p>
+                </div>
               </div>
 
               {/* Navigation Links */}
@@ -615,15 +455,7 @@ export default function Navbar() {
                 <span>Hotline: 01700-000000 (24/7)</span>
               </a>
 
-              {user && (
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 bg-white border border-rose-200 text-rose-600 rounded-xl text-xs font-bold shadow-xs hover:bg-rose-50 transition cursor-pointer"
-                >
-                  <MdLogout className="text-base" />
-                  <span>Sign Out</span>
-                </button>
-              )}
+
             </div>
           </div>
         </div>

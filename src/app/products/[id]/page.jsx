@@ -18,8 +18,6 @@ import {
   MdBlock,
 } from "react-icons/md";
 import { FaWhatsapp } from "react-icons/fa";
-import { useSession } from "@/lib/auth-client";
-
 const WHATSAPP_NUMBER = "8801700000000";
 const PHONE_NUMBER = "+8801700000000";
 
@@ -29,9 +27,6 @@ export default function ProductDetailPage() {
   const { id } = params;
 
   const { addToCart, setIsCartOpen } = useCart();
-  const { data: session } = useSession();
-  const [showAuthWarning, setShowAuthWarning] = useState(false);
-
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -129,15 +124,7 @@ export default function ProductDetailPage() {
   const handleBuyNow = () => {
     if (isOutOfStock) return;
     addToCart(product, quantity);
-    if (!session?.user) {
-      setShowAuthWarning(true);
-      setTimeout(() => {
-        setShowAuthWarning(false);
-        router.push("/login?redirectTo=/checkout");
-      }, 1500);
-    } else {
-      router.push("/checkout");
-    }
+    router.push("/checkout");
   };
 
   const whatsappMessage = encodeURIComponent(
@@ -153,23 +140,7 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 pb-24 relative">
-      {/* Auth Warning Overlay */}
-      {showAuthWarning && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-6 z-[100] animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl max-w-sm w-full text-center space-y-4 transform scale-100 transition-all duration-300">
-            <div className="w-14 h-14 bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center rounded-2xl mx-auto border border-amber-500/20">
-              <svg className="w-8 h-8 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m0-8v6m0-6a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-black text-slate-900 dark:text-white">Authentication Required</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
-              You need to be logged in to proceed. Redirecting to login...
-            </p>
-            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          </div>
-        </div>
-      )}
+
       {/* Top Breadcrumb */}
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-3 px-4 md:px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
