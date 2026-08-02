@@ -3,34 +3,20 @@ import { NextResponse } from "next/server";
 export async function proxy(request) {
   const { pathname, origin } = request.nextUrl;
 
-  // Exclude /admin/login from admin protection to prevent loops
-  const isAdminRoute = (pathname === "/admin" || pathname.startsWith("/admin/")) && pathname !== "/admin/login";
+  // ১. /admin/login পেজটির ওপর কোনো বাধা থাকবে না (লুপ বা ৪০৪ বন্ধ করতে)
+  if (pathname === "/admin/login") {
+    return NextResponse.next();
+  }
+
+  // ২. শুধুমাত্র /admin এবং এর সাব-রুটে ঢুকলে কুকি চেক হবে
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
 
   if (isAdminRoute) {
-    try {
-      const response = await fetch(`${origin}/api/auth/get-session`, {
-        headers: {
-          cookie: request.headers.get("cookie") || "",
-        },
-      });
+    // BetterAuth API এর বদলে আমাদের তৈরি করা সিকিউর admin_token চেক করা হচ্ছে
+    const adminToken = request.cookies.get("admin_token")?.value;
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch session status");
-      }
-
-      const session = await response.json();
-
-      // BetterAuth returns null or an object without session if unauthenticated
-      if (!session || !session.session) {
-        return NextResponse.redirect(new URL("/admin/login", origin));
-      }
-
-      // Admin access validation
-      if (session.user?.role !== "admin") {
-        return NextResponse.redirect(new URL("/", origin));
-      }
-    } catch (error) {
-      console.error("Proxy authentication check failed:", error);
+    // টোকেন না থাকলে সরাসরি Secret Admin Login পেজে পাঠাবে
+    if (!adminToken) {
       return NextResponse.redirect(new URL("/admin/login", origin));
     }
   }
@@ -39,7 +25,5 @@ export async function proxy(request) {
 }
 
 export const config = {
-  matcher: [
-    "/admin/:path*",
-  ],
+  matcher: ["/admin/:path*"],
 };
