@@ -1,68 +1,64 @@
 "use server";
 
-import { db } from "@/lib/db";
-import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { ref, get } from "firebase/database";
 
-export async function trackOrder(queryStr) {
+// Searches orders by Order ID (e.g. "FM-123456") or phone number.
+// No login required — matches the customer-facing TrackOrderPage.
+export async function trackOrder(query) {
   try {
-    if (!queryStr || !queryStr.trim()) {
-      return { success: false, error: "Please enter a Phone Number or Order ID" };
+    const trimmedQuery = query.trim();
+
+    if (!trimmedQuery) {
+      return {
+        success: false,
+        error: "Please enter an Order ID or phone number.",
+      };
     }
 
-    const trimmedQuery = queryStr.trim();
-    const ordersSnapshot = await getDocs(collection(db, "orders"));
-    const result = [];
-    const lowerQuery = trimmedQuery.toLowerCase();
+    const ordersRef = ref(db, "orders");
+    const snapshot = await get(ordersRef);
 
-    ordersSnapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      const orderId = (data.orderId || "").toLowerCase();
-      const phone = data.phone || "";
-      const customerPhone = data.customerPhone || "";
+    if (!snapshot.exists()) {
+      return { success: false, error: "No orders found." };
+    }
 
-      if (
-        orderId === lowerQuery ||
-        phone === trimmedQuery ||
-        customerPhone === trimmedQuery
-      ) {
-        result.push({
-          _id: docSnap.id,
-          ...data,
-        });
-      }
-    });
+    const ordersData = snapshot.val();
+    const queryLower = trimmedQuery.toLowerCase();
 
-    // Sort descending by createdAt
-    result.sort((a, b) => {
-      const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date(0);
-      const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date(0);
+    const matches = Object.entries(ordersData)
+      .map(([id, data]) => ({ _id: id, ...data }))
+      .filter((order) => {
+        const orderIdMatch = (order.orderId || "").toLowerCase() === queryLower;
+        const phoneMatch =
+          (order.phone || "").replace(/\s+/g, "") ===
+            trimmedQuery.replace(/\s+/g, "") ||
+          (order.customerPhone || "").replace(/\s+/g, "") ===
+            trimmedQuery.replace(/\s+/g, "");
+        return orderIdMatch || phoneMatch;
+      })
+      .map((order) => ({
+        ...order,
+        // Normalize status field — some orders may have been saved as
+        // "orderStatus" instead of "status"
+        status: order.status || order.orderStatus || "Pending",
+      }));
+
+    if (matches.length === 0) {
+      return {
+        success: false,
+        error: "No orders found with that Order ID or phone number.",
+      };
+    }
+
+    // Sort newest first
+    matches.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+      const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
       return dateB - dateA;
     });
 
-    if (result.length === 0) {
-      return { success: false, error: "No orders found matching this query" };
-    }
-
-    // Map to safe, serializable format
-    const orders = result.map((order) => ({
-      orderId: order.orderId,
-      customerName: order.customerName,
-      phone: order.phone,
-      deliveryArea: order.deliveryArea,
-      paymentMethod: order.paymentMethod,
-      createdAt: order.createdAt ? (order.createdAt.toDate ? order.createdAt.toDate().toISOString() : new Date(order.createdAt).toISOString()) : null,
-      status: order.status || order.orderStatus || "Pending",
-      totalAmount: order.totalAmount || (order.subtotal || 0) + (order.shippingFee || 0),
-      items: (order.items || []).map((item) => ({
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        total: item.total,
-        image: item.image,
-      })),
-    }));
-
-    return { success: true, data: orders };
+    return { success: true, data: matches };
   } catch (error) {
     return { success: false, error: error.message };
   }
