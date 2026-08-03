@@ -9,12 +9,8 @@ import {
   deleteProduct,
 } from "@/app/actions/productActions";
 import { getCategories } from "@/app/actions/categoryActions";
-import { storage, database } from "@/lib/firebase";
-import {
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL,
-} from "firebase/storage";
+import { uploadImageToImgbb } from "@/app/actions/imageActions";
+import { database } from "@/lib/firebase";
 import { ref as dbRef, push } from "firebase/database";
 import {
   FiPlus,
@@ -142,15 +138,20 @@ export default function AdminProductsPage() {
     setErrorMsg("");
 
     try {
-      // 1. Upload image to Firebase Storage (products/ folder)
+      // 1. Upload image to ImgBB (free hosting, no CORS issues since it
+      //    runs through our server action instead of the browser directly)
       let imageUrl = form.image || "";
       if (imageMode === "file" && imageFile) {
-        const sRef = storageRef(
-          storage,
-          `products/${Date.now()}_${imageFile.name}`,
-        );
-        const uploadResult = await uploadBytes(sRef, imageFile);
-        imageUrl = await getDownloadURL(uploadResult.ref);
+        const imgFormData = new FormData();
+        imgFormData.append("image", imageFile);
+
+        const uploadRes = await uploadImageToImgbb(imgFormData);
+
+        if (!uploadRes.success) {
+          throw new Error(uploadRes.error || "Image upload failed");
+        }
+
+        imageUrl = uploadRes.url;
       }
 
       // 2. Build the canonical product object
