@@ -1,19 +1,11 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { db } from "@/lib/firebase";
 import { revalidatePath } from "next/cache";
-import {
-  collection,
-  addDoc,
-  updateDoc,
-  getDocs,
-  doc,
-  query,
-  where,
-  increment,
-} from "firebase/firestore";
+import { ref, get, push, set, update } from "firebase/database";
 
-const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
+const SERVER_URL =
+  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
 
 export async function createOrder(orderData) {
   try {
@@ -39,8 +31,10 @@ export async function createOrder(orderData) {
       return { success: false, error: "Cart is empty" };
     }
 
+    const orderId = `FM-${Date.now().toString().slice(-6)}`;
+
     const orderObj = {
-      orderId: `FM-${Date.now().toString().slice(-6)}`,
+      orderId,
       customerName: customerName.trim(),
       customerPhone: phone.trim(),
       phone: phone.trim(), // Keep phone for compatibility/admin UI
@@ -53,19 +47,23 @@ export async function createOrder(orderData) {
         name: item.name,
         price: item.offerPrice ? Number(item.offerPrice) : Number(item.price),
         quantity: item.quantity,
-        total: (item.offerPrice ? Number(item.offerPrice) : Number(item.price)) * item.quantity,
+        total:
+          (item.offerPrice ? Number(item.offerPrice) : Number(item.price)) *
+          item.quantity,
         image: item.image || "",
       })),
       subtotal: Number(subtotal),
       shippingFee: Number(shippingFee),
       totalAmount: Number(totalAmount),
       paymentMethod,
-      paymentStatus: paymentMethod.includes("bKash") ? "Pending Verification (bKash)" : "Unpaid (Cash on Delivery)",
+      paymentStatus: paymentMethod.includes("bKash")
+        ? "Pending Verification (bKash)"
+        : "Unpaid (Cash on Delivery)",
       orderStatus: "Pending",
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     };
 
-    // Attempt Express server POST first
+    // Optional: try external Express server first
     try {
       const res = await fetch(`${SERVER_URL}/api/orders`, {
         method: "POST",
@@ -74,35 +72,45 @@ export async function createOrder(orderData) {
       });
       if (res.ok) {
         const json = await res.json();
+        revalidatePath("/admin/orders");
         revalidatePath("/admin/products");
         return { success: true, data: json.data || orderObj };
       }
     } catch (serverErr) {
-      console.warn("Express server orders API unreachable, inserting directly to MongoDB:", serverErr.message);
+      console.warn(
+        "Express server orders API unreachable, falling back to Firebase:",
+        serverErr.message,
+      );
     }
 
-    // Direct Firestore fallback
-    const docRef = await addDoc(collection(db, "orders"), orderObj);
+    // Fallback: write directly to Realtime Database under "orders"
+    const ordersRef = ref(db, "orders");
+    const newOrderRef = push(ordersRef);
+    await set(newOrderRef, orderObj);
 
-    // Optionally update product stock levels in Firestore
+    // Decrement product stock levels
     try {
       for (const item of cartItems) {
-        if (item._id && !item._id.includes("_")) {
-          const productRef = doc(db, "products", item._id);
-          await updateDoc(productRef, {
-            stock: increment(-item.quantity),
-          });
+        if (!item._id) continue;
+        const productRef = ref(db, `products/${item._id}`);
+        const snapshot = await get(productRef);
+        if (snapshot.exists()) {
+          const currentStock = Number(snapshot.val().stock) || 0;
+          const newStock = Math.max(0, currentStock - Number(item.quantity));
+          await update(productRef, { stock: newStock });
         }
       }
     } catch (stockErr) {
       console.warn("Stock update warning:", stockErr.message);
     }
 
+    revalidatePath("/admin/orders");
     revalidatePath("/admin/products");
+
     return {
       success: true,
       data: {
-        _id: docRef.id,
+        _id: newOrderRef.key,
         ...orderObj,
       },
     };
@@ -116,34 +124,68 @@ export async function getUserOrders(email) {
     if (!email) {
       return { success: false, error: "Email is required" };
     }
-    const q = query(
-      collection(db, "orders"),
-      where("email", "==", email.trim())
-    );
-    const querySnapshot = await getDocs(q);
-    const result = [];
-    querySnapshot.forEach((docSnap) => {
-      result.push({
-        _id: docSnap.id,
-        ...docSnap.data(),
-      });
-    });
+
+    const ordersRef = ref(db, "orders");
+    const snapshot = await get(ordersRef);
+
+    if (!snapshot.exists()) {
+      return { success: true, data: [] };
+    }
+
+    const ordersData = snapshot.val();
+    const trimmedEmail = email.trim().toLowerCase();
+
+    const orders = Object.entries(ordersData)
+      .map(([id, data]) => ({ _id: id, ...data }))
+      .filter(
+        (order) => (order.email || "").trim().toLowerCase() === trimmedEmail,
+      );
 
     // Sort descending by createdAt
-    result.sort((a, b) => {
-      const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date(0);
-      const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date(0);
+    orders.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+      const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
       return dateB - dateA;
     });
 
-    // Map to clean objects
-    const orders = result.map((order) => ({
-      ...order,
-      _id: order._id,
-      createdAt: order.createdAt ? (order.createdAt.toDate ? order.createdAt.toDate().toISOString() : new Date(order.createdAt).toISOString()) : null,
+    return { success: true, data: orders };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getAllOrders() {
+  try {
+    const ordersRef = ref(db, "orders");
+    const snapshot = await get(ordersRef);
+
+    if (!snapshot.exists()) {
+      return { success: true, data: [] };
+    }
+
+    const ordersData = snapshot.val();
+    const orders = Object.entries(ordersData).map(([id, data]) => ({
+      _id: id,
+      ...data,
     }));
 
+    orders.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+      const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+      return dateB - dateA;
+    });
+
     return { success: true, data: orders };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateOrderStatus(id, orderStatus) {
+  try {
+    await update(ref(db, `orders/${id}`), { orderStatus });
+    revalidatePath("/admin/orders");
+    return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
   }

@@ -1,121 +1,91 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db } from "@/lib/firebase";
 import { cookies } from "next/headers";
-import {
-  collection,
-  getDocs,
-  getDoc,
-  doc,
-  updateDoc,
-  increment,
-} from "firebase/firestore";
+import { ref, get, update } from "firebase/database";
 
-// Helper function to check admin authentication via httpOnly cookie
-async function isAdminAuthenticated() {
+// Admin Verification using HTTP-only Cookie (same system as the rest of the project)
+async function verifyAdmin() {
   const cookieStore = await cookies();
   const token = cookieStore.get("admin_token")?.value;
   return token === "authenticated";
 }
 
-// GET all orders (admin only)
-export async function GET(req) {
+// GET /api/admin/orders — returns all orders for the admin dashboard
+export async function GET() {
   try {
-    // 1. Verify admin session via cookie
-    const isAuth = await isAdminAuthenticated();
-    if (!isAuth) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const isAdmin = await verifyAdmin();
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: Admin access required" },
+        { status: 403 },
+      );
     }
 
-    // 2. Fetch orders from Firestore
-    const querySnapshot = await getDocs(collection(db, "orders"));
-    const all = [];
-    querySnapshot.forEach((docSnap) => {
-      all.push({
-        _id: docSnap.id,
-        ...docSnap.data(),
-      });
-    });
+    const ordersRef = ref(db, "orders");
+    const snapshot = await get(ordersRef);
 
-    // 3. Sort descending by createdAt
-    all.sort((a, b) => {
-      const dateA = a.createdAt
-        ? a.createdAt.toDate
-          ? a.createdAt.toDate()
-          : new Date(a.createdAt)
-        : new Date(0);
-      const dateB = b.createdAt
-        ? b.createdAt.toDate
-          ? b.createdAt.toDate()
-          : new Date(b.createdAt)
-        : new Date(0);
+    if (!snapshot.exists()) {
+      return NextResponse.json({ orders: [] });
+    }
+
+    const ordersData = snapshot.val();
+
+    const orders = Object.entries(ordersData).map(([id, data]) => ({
+      _id: id,
+      ...data,
+      // Normalize status field: older orders may have been saved as
+      // "orderStatus", newer ones as "status" — always expose "status".
+      status: data.status || data.orderStatus || "Pending",
+      total: data.total ?? data.totalAmount ?? 0,
+    }));
+
+    // Sort newest first
+    orders.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+      const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
       return dateB - dateA;
     });
 
-    // 4. Normalize fields
-    const normalized = all.map((o) => ({
-      ...o,
-      _id: o._id,
-      createdAt: o.createdAt
-        ? o.createdAt.toDate
-          ? o.createdAt.toDate().toISOString()
-          : new Date(o.createdAt).toISOString()
-        : null,
-      status: o.status || o.orderStatus || "Pending",
-      total: o.totalAmount || o.total || o.grandTotal || 0,
-    }));
-
-    return NextResponse.json({ orders: normalized });
-  } catch (err) {
-    console.error("Error fetching orders:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ orders });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 },
+    );
   }
 }
 
-// PATCH - update order status (and optionally deduct stock)
+// PATCH /api/admin/orders — updates an order's status
 export async function PATCH(req) {
   try {
-    // 1. Verify admin session via cookie
-    const isAuth = await isAdminAuthenticated();
-    if (!isAuth) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const isAdmin = await verifyAdmin();
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: Admin access required" },
+        { status: 403 },
+      );
     }
 
     const { orderId, status } = await req.json();
+
     if (!orderId || !status) {
       return NextResponse.json(
-        { error: "orderId and status required" },
+        { success: false, error: "orderId and status are required" },
         { status: 400 },
       );
     }
 
-    const orderRef = doc(db, "orders", orderId);
-    const orderSnap = await getDoc(orderRef);
-    if (!orderSnap.exists()) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
-    }
-    const order = orderSnap.data();
-
-    // When marking as "Delivered", deduct stock for each item
-    if (status === "Delivered" && order.status !== "Delivered") {
-      for (const item of order.items || []) {
-        if (item._id && item.quantity) {
-          const productRef = doc(db, "products", item._id);
-          await updateDoc(productRef, {
-            stock: increment(-item.quantity),
-          });
-        }
-      }
-    }
-
-    await updateDoc(orderRef, {
+    await update(ref(db, `orders/${orderId}`), {
       status,
-      orderStatus: status, // keep both fields in sync
-      updatedAt: new Date(),
+      orderStatus: status, // kept in sync for backward compatibility
+      updatedAt: new Date().toISOString(),
     });
 
-    return NextResponse.json({ success: true, status });
-  } catch (err) {
-    console.error("Error updating order:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 },
+    );
   }
 }
