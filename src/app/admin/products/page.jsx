@@ -9,8 +9,12 @@ import {
   deleteProduct,
 } from "@/app/actions/productActions";
 import { getCategories } from "@/app/actions/categoryActions";
-import { storage, auth, database } from "@/lib/firebase";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage, database } from "@/lib/firebase";
+import {
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
 import { ref as dbRef, push } from "firebase/database";
 import {
   FiPlus,
@@ -27,6 +31,7 @@ import {
   FiPercent,
   FiDollarSign,
   FiLayers,
+  FiAlertTriangle,
 } from "react-icons/fi";
 
 export default function AdminProductsPage() {
@@ -36,13 +41,17 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  
+
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [imageFile, setImageFile] = useState(null);
-  
+
+  // Delete confirmation modal state
+  const [deleteTarget, setDeleteTarget] = useState(null); // holds the product being deleted
+  const [deleting, setDeleting] = useState(false);
+
   // Image Upload Mode: 'file' | 'url'
   const [imageMode, setImageMode] = useState("file");
 
@@ -58,7 +67,10 @@ export default function AdminProductsPage() {
 
   const loadData = async () => {
     setLoading(true);
-    const [prodRes, catRes] = await Promise.all([getProducts(), getCategories()]);
+    const [prodRes, catRes] = await Promise.all([
+      getProducts(),
+      getCategories(),
+    ]);
     if (prodRes.success) setProducts(prodRes.data);
     if (catRes.success) setCategories(catRes.data);
     setLoading(false);
@@ -89,9 +101,12 @@ export default function AdminProductsPage() {
       name: product.name || "",
       description: product.description || "",
       price: product.price !== undefined ? String(product.price) : "",
-      offerPrice: product.offerPrice !== null && product.offerPrice !== undefined ? String(product.offerPrice) : "",
+      offerPrice:
+        product.offerPrice !== null && product.offerPrice !== undefined
+          ? String(product.offerPrice)
+          : "",
       stock: product.stock !== undefined ? String(product.stock) : "0",
-      category: product.category || (categories[0]?.name || ""),
+      category: product.category || categories[0]?.name || "",
       image: product.image || "",
     });
     setErrorMsg("");
@@ -123,13 +138,6 @@ export default function AdminProductsPage() {
       return;
     }
 
-    // Security Guard: verify Firebase Auth session before any write
-    if (!auth.currentUser) {
-      setErrorMsg("Session expired. Please log in again.");
-      router.push("/admin/login");
-      return;
-    }
-
     setSubmitting(true);
     setErrorMsg("");
 
@@ -137,7 +145,10 @@ export default function AdminProductsPage() {
       // 1. Upload image to Firebase Storage (products/ folder)
       let imageUrl = form.image || "";
       if (imageMode === "file" && imageFile) {
-        const sRef = storageRef(storage, `products/${Date.now()}_${imageFile.name}`);
+        const sRef = storageRef(
+          storage,
+          `products/${Date.now()}_${imageFile.name}`,
+        );
         const uploadResult = await uploadBytes(sRef, imageFile);
         imageUrl = await getDownloadURL(uploadResult.ref);
       }
@@ -191,21 +202,34 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
-    const res = await deleteProduct(id);
+  // Opens the custom confirmation modal instead of native confirm()
+  const handleDeleteClick = (product) => {
+    setDeleteTarget(product);
+  };
+
+  // Runs after the user confirms inside the modal
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const res = await deleteProduct(deleteTarget._id);
+    setDeleting(false);
+
     if (res.success) {
+      setDeleteTarget(null);
       loadData();
     } else {
-      alert("Failed to delete: " + res.error);
+      setErrorMsg(res.error || "Failed to delete product.");
+      setDeleteTarget(null);
     }
   };
 
   const filteredProducts = products.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      (p.description && p.description.toLowerCase().includes(search.toLowerCase()));
-    const matchesCat = selectedCategory === "all" || p.category === selectedCategory;
+      (p.description &&
+        p.description.toLowerCase().includes(search.toLowerCase()));
+    const matchesCat =
+      selectedCategory === "all" || p.category === selectedCategory;
     return matchesSearch && matchesCat;
   });
 
@@ -218,7 +242,8 @@ export default function AdminProductsPage() {
             <FiBox className="text-emerald-400" /> Product Management
           </h1>
           <p className="text-slate-400 text-sm mt-1">
-            Add, update, or remove products, configure pricing, stock levels & categories.
+            Add, update, or remove products, configure pricing, stock levels &
+            categories.
           </p>
         </div>
 
@@ -269,8 +294,12 @@ export default function AdminProductsPage() {
       ) : filteredProducts.length === 0 ? (
         <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-12 text-center text-slate-400">
           <FiBox className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <p className="text-lg font-medium text-slate-300">No products found</p>
-          <p className="text-sm text-slate-500 mt-1">Try adjusting your search query or add a new product.</p>
+          <p className="text-lg font-medium text-slate-300">
+            No products found
+          </p>
+          <p className="text-sm text-slate-500 mt-1">
+            Try adjusting your search query or add a new product.
+          </p>
         </div>
       ) : (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
@@ -282,14 +311,22 @@ export default function AdminProductsPage() {
                   <th className="py-4 px-6 font-semibold">Category</th>
                   <th className="py-4 px-6 font-semibold">Price / Offer</th>
                   <th className="py-4 px-6 font-semibold">Stock</th>
-                  <th className="py-4 px-6 font-semibold text-right">Actions</th>
+                  <th className="py-4 px-6 font-semibold text-right">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {filteredProducts.map((product) => {
-                  const hasOffer = product.offerPrice !== null && product.offerPrice !== undefined && Number(product.offerPrice) > 0;
+                  const hasOffer =
+                    product.offerPrice !== null &&
+                    product.offerPrice !== undefined &&
+                    Number(product.offerPrice) > 0;
                   return (
-                    <tr key={product._id} className="hover:bg-slate-800/40 transition">
+                    <tr
+                      key={product._id}
+                      className="hover:bg-slate-800/40 transition"
+                    >
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-4">
                           {product.image ? (
@@ -304,7 +341,9 @@ export default function AdminProductsPage() {
                             </div>
                           )}
                           <div>
-                            <p className="font-semibold text-white text-base">{product.name}</p>
+                            <p className="font-semibold text-white text-base">
+                              {product.name}
+                            </p>
                             <p className="text-xs text-slate-400 max-w-xs truncate mt-0.5">
                               {product.description || "No description provided"}
                             </p>
@@ -364,7 +403,7 @@ export default function AdminProductsPage() {
                           <FiEdit2 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(product._id)}
+                          onClick={() => handleDeleteClick(product)}
                           className="p-2 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 transition"
                           title="Delete Product"
                         >
@@ -429,7 +468,9 @@ export default function AdminProductsPage() {
                   rows={3}
                   placeholder="Detailed specs, features, and medical applications..."
                   value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
                 />
               </div>
@@ -446,7 +487,9 @@ export default function AdminProductsPage() {
                     required
                     placeholder="99.99"
                     value={form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, price: e.target.value })
+                    }
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition"
                   />
                 </div>
@@ -460,7 +503,9 @@ export default function AdminProductsPage() {
                     step="0.01"
                     placeholder="79.99 (Optional)"
                     value={form.offerPrice}
-                    onChange={(e) => setForm({ ...form, offerPrice: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, offerPrice: e.target.value })
+                    }
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition"
                   />
                 </div>
@@ -474,7 +519,9 @@ export default function AdminProductsPage() {
                     required
                     placeholder="10"
                     value={form.stock}
-                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, stock: e.target.value })
+                    }
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition"
                   />
                 </div>
@@ -487,10 +534,14 @@ export default function AdminProductsPage() {
                 </label>
                 <select
                   value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, category: e.target.value })
+                  }
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition"
                 >
-                  <option value="" disabled>Select a category</option>
+                  <option value="" disabled>
+                    Select a category
+                  </option>
                   {categories.map((cat) => (
                     <option key={cat._id} value={cat.name}>
                       {cat.name}
@@ -499,7 +550,8 @@ export default function AdminProductsPage() {
                 </select>
                 {categories.length === 0 && (
                   <p className="text-xs text-amber-400 mt-1">
-                    No categories found. Create categories first in Category Management.
+                    No categories found. Create categories first in Category
+                    Management.
                   </p>
                 )}
               </div>
@@ -563,7 +615,9 @@ export default function AdminProductsPage() {
                     type="url"
                     placeholder="https://example.com/product-image.jpg"
                     value={form.image}
-                    onChange={(e) => setForm({ ...form, image: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, image: e.target.value })
+                    }
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition"
                   />
                 )}
@@ -577,8 +631,12 @@ export default function AdminProductsPage() {
                       className="w-16 h-16 rounded-lg object-cover border border-slate-700"
                     />
                     <div className="flex-1 truncate">
-                      <p className="text-xs font-semibold text-slate-300">Image Loaded</p>
-                      <p className="text-[11px] text-slate-500 truncate">{form.image.slice(0, 50)}...</p>
+                      <p className="text-xs font-semibold text-slate-300">
+                        Image Loaded
+                      </p>
+                      <p className="text-[11px] text-slate-500 truncate">
+                        {form.image.slice(0, 50)}...
+                      </p>
                     </div>
                     <button
                       type="button"
@@ -614,6 +672,78 @@ export default function AdminProductsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center shrink-0">
+                <FiAlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-white">
+                  Delete this product?
+                </h3>
+                <p className="text-sm text-slate-400 mt-1">
+                  You're about to permanently delete{" "}
+                  <span className="text-slate-200 font-semibold">
+                    "{deleteTarget.name}"
+                  </span>
+                  . This action cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            {/* Small preview of the product being deleted */}
+            <div className="flex items-center gap-3 bg-slate-950 border border-slate-800 rounded-xl p-3">
+              {deleteTarget.image ? (
+                <img
+                  src={deleteTarget.image}
+                  alt={deleteTarget.name}
+                  className="w-10 h-10 rounded-lg object-cover border border-slate-700 shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 shrink-0">
+                  <FiImage className="w-5 h-5" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-slate-200 truncate">
+                  {deleteTarget.name}
+                </p>
+                <p className="text-xs text-slate-500 truncate">
+                  {deleteTarget.category || "Uncategorized"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                className="px-5 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition text-sm font-medium disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm transition shadow-lg shadow-red-600/20 disabled:opacity-50"
+              >
+                {deleting ? (
+                  <FiLoader className="w-4 h-4 animate-spin" />
+                ) : (
+                  <FiTrash2 className="w-4 h-4" />
+                )}
+                Delete Product
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import { collection, getDocs, addDoc } from "firebase/firestore";
 
+// Helper function to verify admin httpOnly cookie
+async function isAdminAuthenticated() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("admin_token")?.value;
+  return token === "authenticated";
+}
+
+// GET all products
 export async function GET() {
   try {
     const productsSnapshot = await getDocs(collection(db, "products"));
@@ -13,8 +20,16 @@ export async function GET() {
       products.push({
         _id: docSnap.id,
         ...data,
-        createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().toISOString() : new Date(data.createdAt).toISOString()) : null,
-        updatedAt: data.updatedAt ? (data.updatedAt.toDate ? data.updatedAt.toDate().toISOString() : new Date(data.updatedAt).toISOString()) : null,
+        createdAt: data.createdAt
+          ? data.createdAt.toDate
+            ? data.createdAt.toDate().toISOString()
+            : new Date(data.createdAt).toISOString()
+          : null,
+        updatedAt: data.updatedAt
+          ? data.updatedAt.toDate
+            ? data.updatedAt.toDate().toISOString()
+            : new Date(data.updatedAt).toISOString()
+          : null,
       });
     });
 
@@ -26,23 +41,34 @@ export async function GET() {
 
     return NextResponse.json({ success: true, data: products });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 },
+    );
   }
 }
 
+// POST - Add a new product (admin only)
 export async function POST(req) {
   try {
-    const reqHeaders = await headers();
-    const session = await auth.api.getSession({ headers: reqHeaders });
-    if (!session?.user || session.user.role !== "admin") {
-      return NextResponse.json({ success: false, error: "Unauthorized: Admin access required" }, { status: 403 });
+    // 1. Verify admin token from cookie
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: Admin access required" },
+        { status: 401 },
+      );
     }
 
     const body = await req.json();
-    const { name, description, price, offerPrice, stock, category, image } = body;
+    const { name, description, price, offerPrice, stock, category, image } =
+      body;
 
     if (!name || price === undefined) {
-      return NextResponse.json({ success: false, error: "Name and price are required" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Name and price are required" },
+        { status: 400 },
+      );
     }
 
     const newProduct = {
@@ -58,8 +84,24 @@ export async function POST(req) {
     };
 
     const docRef = await addDoc(collection(db, "products"), newProduct);
-    return NextResponse.json({ success: true, data: { _id: docRef.id, ...newProduct } }, { status: 201 });
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          _id: docRef.id,
+          ...newProduct,
+          createdAt: newProduct.createdAt.toISOString(),
+          updatedAt: newProduct.updatedAt.toISOString(),
+        },
+      },
+      { status: 201 },
+    );
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error("Error adding product:", error);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 },
+    );
   }
 }

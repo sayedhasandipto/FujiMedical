@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import { collection, getDocs, addDoc } from "firebase/firestore";
+
+// Admin Cookie Checker
+async function isAdminAuthenticated() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("admin_token")?.value;
+  return token === "authenticated";
+}
 
 export async function GET() {
   try {
@@ -16,23 +22,32 @@ export async function GET() {
     });
     return NextResponse.json({ success: true, data: categories });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 },
+    );
   }
 }
 
 export async function POST(req) {
   try {
-    const reqHeaders = await headers();
-    const session = await auth.api.getSession({ headers: reqHeaders });
-    if (!session?.user || session.user.role !== "admin") {
-      return NextResponse.json({ success: false, error: "Unauthorized: Admin access required" }, { status: 403 });
+    // 1. Verify admin token from cookie
+    const isAuth = await isAdminAuthenticated();
+    if (!isAuth) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 },
+      );
     }
 
     const body = await req.json();
     const { name, description } = body;
 
     if (!name) {
-      return NextResponse.json({ success: false, error: "Category name is required" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Category name is required" },
+        { status: 400 },
+      );
     }
 
     const newCategory = {
@@ -43,8 +58,23 @@ export async function POST(req) {
     };
 
     const docRef = await addDoc(collection(db, "categories"), newCategory);
-    return NextResponse.json({ success: true, data: { _id: docRef.id, ...newCategory } }, { status: 201 });
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          _id: docRef.id,
+          ...newCategory,
+          createdAt: newCategory.createdAt.toISOString(),
+          updatedAt: newCategory.updatedAt.toISOString(),
+        },
+      },
+      { status: 201 },
+    );
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 },
+    );
   }
 }

@@ -1,93 +1,64 @@
 "use server";
 
-import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { db } from "@/lib/firebase";
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import {
-  collection,
-  getDocs,
-  getDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  where,
-  arrayUnion,
-  serverTimestamp,
-} from "firebase/firestore";
+import { ref, get, push, set, update, remove } from "firebase/database";
 
 const SERVER_URL =
   process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
 
+// Admin Verification using HTTP-only Cookie (same system as categoryActions.js)
 async function verifyAdmin() {
-  const reqHeaders = await headers();
-  const session = await auth.api.getSession({
-    headers: reqHeaders,
-  });
+  const cookieStore = await cookies();
+  const token = cookieStore.get("admin_token")?.value;
 
-  if (!session?.user || session.user.role !== "admin") {
+  if (token !== "authenticated") {
     throw new Error("Unauthorized: Admin access required.");
   }
-  return session.user;
+
+  return true;
 }
 
-function extractProductsFromDocs(docs) {
-  const allProducts = [];
-  docs.forEach((doc) => {
-    if (Array.isArray(doc.products)) {
-      doc.products.forEach((item, itemIdx) => {
-        allProducts.push({
-          _id: item._id
-            ? item._id.toString()
-            : `${doc._id}_${itemIdx}`,
-          name: item.name || "Unnamed Product",
-          brand: item.brand || "",
-          genericName: item.genericName || "",
-          category: doc.category || item.category || "General",
-          price: Number(item.price) || 0,
-          offerPrice: item.offerPrice ? Number(item.offerPrice) : null,
-          stock: Number(item.stock) || 0,
-          unit: item.unit || "",
-          description: item.description || "",
-          prescriptionRequired: item.prescriptionRequired || false,
-          image: item.image || "",
-          parentDocId: doc._id,
-        });
-      });
-    } else if (doc.name) {
-      allProducts.push({
-        ...doc,
-        _id: doc._id,
-        category: doc.category || "General",
-        price: Number(doc.price) || 0,
-        stock: Number(doc.stock) || 0,
-      });
-    }
-  });
-  return allProducts;
+function normalizeProduct(id, item) {
+  return {
+    _id: id,
+    name: item.name || "Unnamed Product",
+    brand: item.brand || "",
+    genericName: item.genericName || "",
+    category: item.category || "General",
+    price: Number(item.price) || 0,
+    offerPrice: item.offerPrice ? Number(item.offerPrice) : null,
+    stock: Number(item.stock) || 0,
+    unit: item.unit || "",
+    description: item.description || "",
+    prescriptionRequired: item.prescriptionRequired || false,
+    image: item.image || "",
+    createdAt: item.createdAt || null,
+  };
 }
 
 export async function getProducts() {
   try {
-    const productsSnapshot = await getDocs(collection(db, "products"));
-    const docs = [];
-    productsSnapshot.forEach((docSnap) => {
-      docs.push({
-        _id: docSnap.id,
-        ...docSnap.data(),
-      });
-    });
+    const productsRef = ref(db, "products");
+    const snapshot = await get(productsRef);
 
-    // Sort descending by createdAt
-    docs.sort((a, b) => {
-      const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date(0);
-      const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date(0);
+    if (!snapshot.exists()) {
+      return { success: true, data: [] };
+    }
+
+    const productsData = snapshot.val();
+
+    const products = Object.entries(productsData).map(([id, item]) =>
+      normalizeProduct(id, item),
+    );
+
+    // Sort descending by createdAt (if present)
+    products.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+      const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
       return dateB - dateA;
     });
-
-    const products = extractProductsFromDocs(docs);
 
     return {
       success: true,
@@ -110,6 +81,10 @@ export async function createProduct(data) {
     const category = data.category || "General";
     const image = data.image || "";
     const imageUrl = data.imageUrl || image;
+    const brand = data.brand || "";
+    const genericName = data.genericName || "";
+    const unit = data.unit || "";
+    const prescriptionRequired = data.prescriptionRequired || false;
 
     if (!name || isNaN(price)) {
       return {
@@ -120,15 +95,21 @@ export async function createProduct(data) {
 
     const payload = {
       name,
+      brand,
+      genericName,
       description,
       price,
       offerPrice,
       stock,
+      unit,
       category,
-      image,
-      imageUrl,
+      image: imageUrl || image,
+      prescriptionRequired,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
+    // Optional: try external Express server first
     try {
       const res = await fetch(`${SERVER_URL}/api/products`, {
         method: "POST",
@@ -144,38 +125,24 @@ export async function createProduct(data) {
       }
     } catch (serverErr) {
       console.warn(
-        "Express server POST failed, falling back to DB:",
+        "Express server POST failed, falling back to Firebase:",
         serverErr.message,
       );
     }
 
-    const q = query(collection(db, "products"), where("category", "==", category));
-    const querySnapshot = await getDocs(q);
-    let categoryDoc = null;
-    querySnapshot.forEach((docSnap) => {
-      const d = docSnap.data();
-      if (Array.isArray(d.products)) {
-        categoryDoc = { _id: docSnap.id, ...d };
-      }
-    });
-
-    if (categoryDoc) {
-      const categoryDocRef = doc(db, "products", categoryDoc._id);
-      await updateDoc(categoryDocRef, {
-        products: arrayUnion(payload),
-      });
-    } else {
-      await addDoc(collection(db, "products"), {
-        ...payload,
-        createdAt: serverTimestamp(),
-      });
-    }
+    // Fallback: write directly to Realtime Database
+    const productsRef = ref(db, "products");
+    const newProductRef = push(productsRef);
+    await set(newProductRef, payload);
 
     revalidatePath("/admin/products");
     revalidatePath("/");
     revalidatePath("/categories");
 
-    return { success: true };
+    return {
+      success: true,
+      data: { _id: newProductRef.key, ...payload },
+    };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -184,6 +151,7 @@ export async function createProduct(data) {
 export async function updateProduct(id, data) {
   try {
     await verifyAdmin();
+
     try {
       const res = await fetch(`${SERVER_URL}/api/products/${id}`, {
         method: "PUT",
@@ -199,6 +167,32 @@ export async function updateProduct(id, data) {
     } catch (serverErr) {
       console.warn("Express server PUT failed:", serverErr.message);
     }
+
+    const updateData = { updatedAt: new Date().toISOString() };
+
+    if (data.name !== undefined) updateData.name = data.name.trim();
+    if (data.brand !== undefined) updateData.brand = data.brand;
+    if (data.genericName !== undefined)
+      updateData.genericName = data.genericName;
+    if (data.description !== undefined)
+      updateData.description = data.description.trim();
+    if (data.price !== undefined) updateData.price = Number(data.price);
+    if (data.offerPrice !== undefined)
+      updateData.offerPrice = data.offerPrice ? Number(data.offerPrice) : null;
+    if (data.stock !== undefined) updateData.stock = Number(data.stock);
+    if (data.unit !== undefined) updateData.unit = data.unit;
+    if (data.category !== undefined) updateData.category = data.category;
+    if (data.image !== undefined) updateData.image = data.image;
+    if (data.imageUrl !== undefined) updateData.image = data.imageUrl;
+    if (data.prescriptionRequired !== undefined)
+      updateData.prescriptionRequired = data.prescriptionRequired;
+
+    await update(ref(db, `products/${id}`), updateData);
+
+    revalidatePath("/admin/products");
+    revalidatePath("/");
+    revalidatePath("/categories");
+
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
@@ -208,6 +202,7 @@ export async function updateProduct(id, data) {
 export async function deleteProduct(id) {
   try {
     await verifyAdmin();
+
     try {
       const res = await fetch(`${SERVER_URL}/api/products/${id}`, {
         method: "DELETE",
@@ -220,26 +215,12 @@ export async function deleteProduct(id) {
       }
     } catch (serverErr) {
       console.warn(
-        "Express server DELETE failed, falling back to DB:",
+        "Express server DELETE failed, falling back to Firebase:",
         serverErr.message,
       );
     }
 
-    if (id.includes("_")) {
-      const [docIdStr, idxStr] = id.split("_");
-      const docRef = doc(db, "products", docIdStr);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const d = docSnap.data();
-        if (Array.isArray(d.products)) {
-          const products = [...d.products];
-          products.splice(Number(idxStr), 1);
-          await updateDoc(docRef, { products });
-        }
-      }
-    } else {
-      await deleteDoc(doc(db, "products", id));
-    }
+    await remove(ref(db, `products/${id}`));
 
     revalidatePath("/admin/products");
     revalidatePath("/");

@@ -96,7 +96,8 @@ export default function AdminCategoriesPage() {
   const filteredCategories = categories.filter(
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
-      (c.description && c.description.toLowerCase().includes(search.toLowerCase()))
+      (c.description &&
+        c.description.toLowerCase().includes(search.toLowerCase())),
   );
 
   return (
@@ -108,7 +109,8 @@ export default function AdminCategoriesPage() {
             <FiGrid className="text-emerald-400" /> Category Management
           </h1>
           <p className="text-slate-400 text-sm mt-1">
-            Organize products by categories for better browsing and search filters.
+            Organize products by categories for better browsing and search
+            filters.
           </p>
         </div>
 
@@ -141,8 +143,12 @@ export default function AdminCategoriesPage() {
       ) : filteredCategories.length === 0 ? (
         <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-12 text-center text-slate-400">
           <FiFolder className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <p className="text-lg font-medium text-slate-300">No categories found</p>
-          <p className="text-sm text-slate-500 mt-1">Click "Add Category" above to create your first category.</p>
+          <p className="text-lg font-medium text-slate-300">
+            No categories found
+          </p>
+          <p className="text-sm text-slate-500 mt-1">
+            Click "Add Category" above to create your first category.
+          </p>
         </div>
       ) : (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
@@ -153,12 +159,17 @@ export default function AdminCategoriesPage() {
                   <th className="py-4 px-6 font-semibold">Category Name</th>
                   <th className="py-4 px-6 font-semibold">Description</th>
                   <th className="py-4 px-6 font-semibold">Created Date</th>
-                  <th className="py-4 px-6 font-semibold text-right">Actions</th>
+                  <th className="py-4 px-6 font-semibold text-right">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {filteredCategories.map((cat) => (
-                  <tr key={cat._id} className="hover:bg-slate-800/40 transition">
+                  <tr
+                    key={cat._id}
+                    className="hover:bg-slate-800/40 transition"
+                  >
                     <td className="py-4 px-6 font-semibold text-white">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
@@ -168,10 +179,16 @@ export default function AdminCategoriesPage() {
                       </div>
                     </td>
                     <td className="py-4 px-6 text-slate-400 max-w-xs truncate">
-                      {cat.description || <span className="text-slate-600 italic">No description</span>}
+                      {cat.description || (
+                        <span className="text-slate-600 italic">
+                          No description
+                        </span>
+                      )}
                     </td>
                     <td className="py-4 px-6 text-slate-400 font-mono text-xs">
-                      {cat.createdAt ? new Date(cat.createdAt).toLocaleDateString() : "—"}
+                      {cat.createdAt
+                        ? new Date(cat.createdAt).toLocaleDateString()
+                        : "—"}
                     </td>
                     <td className="py-4 px-6 text-right space-x-2">
                       <button
@@ -243,7 +260,9 @@ export default function AdminCategoriesPage() {
                   rows={3}
                   placeholder="Brief description of this category..."
                   value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
                 />
               </div>

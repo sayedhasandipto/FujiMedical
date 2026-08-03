@@ -1,67 +1,66 @@
 "use server";
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
-import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  getDoc,
-} from "firebase/firestore";
+import { ref, get, push, update, remove, set } from "firebase/database";
 
 import { db } from "@/lib/firebase";
 
+// Admin Verification using HTTP-only Cookie
 async function verifyAdmin() {
-  const reqHeaders = await headers();
+  const cookieStore = await cookies();
+  const token = cookieStore.get("admin_token")?.value;
 
-  const session = await auth.api.getSession({
-    headers: reqHeaders,
-  });
-
-  if (!session?.user || session.user.role !== "admin") {
+  if (token !== "authenticated") {
     throw new Error("Unauthorized");
   }
 
-  return session.user;
+  return true;
 }
 
 export async function getCategories() {
   try {
-    const categoriesSnapshot = await getDocs(collection(db, "categories"));
-    const productsSnapshot = await getDocs(collection(db, "products"));
+    const categoriesRef = ref(db, "categories");
+    const productsRef = ref(db, "products");
+
+    const [categoriesSnap, productsSnap] = await Promise.all([
+      get(categoriesRef),
+      get(productsRef),
+    ]);
 
     const categoryMap = new Map();
 
-    categoriesSnapshot.forEach((docSnap) => {
-      const data = docSnap.data();
+    if (categoriesSnap.exists()) {
+      const categoriesData = categoriesSnap.val();
 
-      categoryMap.set(data.name.trim().toLowerCase(), {
-        _id: docSnap.id,
-        name: data.name,
-        description: data.description || "",
+      Object.entries(categoriesData).forEach(([id, data]) => {
+        categoryMap.set(data.name.trim().toLowerCase(), {
+          _id: id,
+          name: data.name,
+          description: data.description || "",
+          createdAt: data.createdAt || null,
+        });
       });
-    });
+    }
 
-    productsSnapshot.forEach((docSnap, index) => {
-      const data = docSnap.data();
+    if (productsSnap.exists()) {
+      const productsData = productsSnap.val();
 
-      if (data.category) {
-        const key = data.category.trim().toLowerCase();
+      Object.values(productsData).forEach((data, index) => {
+        if (data.category) {
+          const key = data.category.trim().toLowerCase();
 
-        if (!categoryMap.has(key)) {
-          categoryMap.set(key, {
-            _id: `temp_${index}`,
-            name: data.category,
-            description: `Products in ${data.category}`,
-          });
+          if (!categoryMap.has(key)) {
+            categoryMap.set(key, {
+              _id: `temp_${index}`,
+              name: data.category,
+              description: `Products in ${data.category}`,
+            });
+          }
         }
-      }
-    });
+      });
+    }
 
     return {
       success: true,
@@ -89,11 +88,14 @@ export async function createCategory(data) {
       };
     }
 
-    const docRef = await addDoc(collection(db, "categories"), {
+    const categoriesRef = ref(db, "categories");
+    const newCategoryRef = push(categoriesRef);
+
+    await set(newCategoryRef, {
       name,
       description,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
 
     revalidatePath("/admin/categories");
@@ -103,7 +105,7 @@ export async function createCategory(data) {
     return {
       success: true,
       data: {
-        _id: docRef.id,
+        _id: newCategoryRef.key,
         name,
         description,
       },
@@ -120,18 +122,17 @@ export async function updateCategory(id, data) {
   try {
     await verifyAdmin();
 
-    const categoryRef = doc(db, "categories", id);
+    const categoryRef = ref(db, `categories/${id}`);
 
     const updateData = {
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     };
 
     if (data.name !== undefined) updateData.name = data.name.trim();
-
     if (data.description !== undefined)
       updateData.description = data.description.trim();
 
-    await updateDoc(categoryRef, updateData);
+    await update(categoryRef, updateData);
 
     revalidatePath("/admin/categories");
     revalidatePath("/admin/products");
@@ -152,7 +153,7 @@ export async function deleteCategory(id) {
   try {
     await verifyAdmin();
 
-    await deleteDoc(doc(db, "categories", id));
+    await remove(ref(db, `categories/${id}`));
 
     revalidatePath("/admin/categories");
     revalidatePath("/admin/products");
