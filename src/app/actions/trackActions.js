@@ -1,26 +1,45 @@
 "use server";
 
-import { getCollection } from "@/lib/db";
+import { db } from "@/lib/db";
+import { collection, getDocs } from "firebase/firestore";
 
-export async function trackOrder(query) {
+export async function trackOrder(queryStr) {
   try {
-    if (!query || !query.trim()) {
+    if (!queryStr || !queryStr.trim()) {
       return { success: false, error: "Please enter a Phone Number or Order ID" };
     }
 
-    const trimmedQuery = query.trim();
-    const ordersCol = await getCollection("orders");
+    const trimmedQuery = queryStr.trim();
+    const ordersSnapshot = await getDocs(collection(db, "orders"));
+    const result = [];
+    const lowerQuery = trimmedQuery.toLowerCase();
 
-    // Search by orderId (case-insensitive) OR phone/customerPhone
-    const result = await ordersCol.find({
-      $or: [
-        { orderId: { $regex: new RegExp(`^${trimmedQuery}$`, "i") } },
-        { phone: trimmedQuery },
-        { customerPhone: trimmedQuery }
-      ]
-    }).sort({ createdAt: -1 }).toArray();
+    ordersSnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const orderId = (data.orderId || "").toLowerCase();
+      const phone = data.phone || "";
+      const customerPhone = data.customerPhone || "";
 
-    if (!result || result.length === 0) {
+      if (
+        orderId === lowerQuery ||
+        phone === trimmedQuery ||
+        customerPhone === trimmedQuery
+      ) {
+        result.push({
+          _id: docSnap.id,
+          ...data,
+        });
+      }
+    });
+
+    // Sort descending by createdAt
+    result.sort((a, b) => {
+      const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date(0);
+      const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date(0);
+      return dateB - dateA;
+    });
+
+    if (result.length === 0) {
       return { success: false, error: "No orders found matching this query" };
     }
 
@@ -31,7 +50,7 @@ export async function trackOrder(query) {
       phone: order.phone,
       deliveryArea: order.deliveryArea,
       paymentMethod: order.paymentMethod,
-      createdAt: order.createdAt ? order.createdAt.toISOString() : null,
+      createdAt: order.createdAt ? (order.createdAt.toDate ? order.createdAt.toDate().toISOString() : new Date(order.createdAt).toISOString()) : null,
       status: order.status || order.orderStatus || "Pending",
       totalAmount: order.totalAmount || (order.subtotal || 0) + (order.shippingFee || 0),
       items: (order.items || []).map((item) => ({

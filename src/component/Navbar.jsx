@@ -280,14 +280,7 @@ export default function Navbar() {
             {/* Auth Buttons / Profile Dropdown (Desktop & Mobile) */}
 
 
-            {/* Mobile Hamburger Toggle Button (< lg) */}
-            <button
-              onClick={() => setIsMobileDrawerOpen(true)}
-              className="lg:hidden p-2 rounded-xl hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 transition-colors cursor-pointer"
-              title="Open Navigation Menu"
-            >
-              <MdMenu className="w-6 h-6 text-emerald-900" />
-            </button>
+
           </div>
         </div>
 

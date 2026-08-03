@@ -1,13 +1,30 @@
-import Link from "next/link";
-import { FiHome, FiShield } from "react-icons/fi";
-import AdminSidebarNav from "@/component/AdminSidebarNav";
+"use client";
 
-export const metadata = {
-  title: "Admin Dashboard | FujiMedical",
-  description: "FujiMedical Product & Category Management Dashboard",
-};
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FiHome, FiShield, FiLogOut } from "react-icons/fi";
+import AdminSidebarNav from "@/component/AdminSidebarNav";
+import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
 
 export default function AdminLayout({ children }) {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      // 1. Sign out from Firebase Auth
+      await signOut(auth);
+
+      // 2. Clear the HTTP-only admin_token cookie via API
+      await fetch("/api/admin/logout", { method: "POST" });
+
+      // 3. Redirect to login
+      router.push("/admin/login");
+    } catch (err) {
+      console.error("Logout error:", err.message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">
       {/* ── Dark Sidebar ── */}
@@ -52,6 +69,13 @@ export default function AdminLayout({ children }) {
           >
             <FiHome className="w-3.5 h-3.5" /> Return to Store
           </Link>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-red-900/30 hover:bg-red-900/60 text-red-400 hover:text-red-300 text-xs font-bold transition border border-red-900/50"
+          >
+            <FiLogOut className="w-3.5 h-3.5" /> Logout
+          </button>
         </div>
       </aside>
 

@@ -1,7 +1,17 @@
 "use server";
 
-import { getCollection } from "@/lib/db";
+import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  getDocs,
+  doc,
+  query,
+  where,
+  increment,
+} from "firebase/firestore";
 
 const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
 
@@ -71,19 +81,17 @@ export async function createOrder(orderData) {
       console.warn("Express server orders API unreachable, inserting directly to MongoDB:", serverErr.message);
     }
 
-    // Direct MongoDB fallback
-    const ordersCol = await getCollection("orders");
-    const result = await ordersCol.insertOne(orderObj);
+    // Direct Firestore fallback
+    const docRef = await addDoc(collection(db, "orders"), orderObj);
 
-    // Optionally update product stock levels in MongoDB
+    // Optionally update product stock levels in Firestore
     try {
-      const productsCol = await getCollection("products");
       for (const item of cartItems) {
         if (item._id && !item._id.includes("_")) {
-          await productsCol.updateOne(
-            { _id: item._id },
-            { $inc: { stock: -item.quantity } }
-          );
+          const productRef = doc(db, "products", item._id);
+          await updateDoc(productRef, {
+            stock: increment(-item.quantity),
+          });
         }
       }
     } catch (stockErr) {
@@ -94,7 +102,7 @@ export async function createOrder(orderData) {
     return {
       success: true,
       data: {
-        _id: result.insertedId.toString(),
+        _id: docRef.id,
         ...orderObj,
       },
     };
@@ -108,14 +116,31 @@ export async function getUserOrders(email) {
     if (!email) {
       return { success: false, error: "Email is required" };
     }
-    const ordersCol = await getCollection("orders");
-    const result = await ordersCol.find({ email: email.trim() }).sort({ createdAt: -1 }).toArray();
+    const q = query(
+      collection(db, "orders"),
+      where("email", "==", email.trim())
+    );
+    const querySnapshot = await getDocs(q);
+    const result = [];
+    querySnapshot.forEach((docSnap) => {
+      result.push({
+        _id: docSnap.id,
+        ...docSnap.data(),
+      });
+    });
 
-    // Map MongoDB ObjectIDs and Date types to clean objects
+    // Sort descending by createdAt
+    result.sort((a, b) => {
+      const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date(0);
+      const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date(0);
+      return dateB - dateA;
+    });
+
+    // Map to clean objects
     const orders = result.map((order) => ({
       ...order,
-      _id: order._id.toString(),
-      createdAt: order.createdAt ? order.createdAt.toISOString() : null,
+      _id: order._id,
+      createdAt: order.createdAt ? (order.createdAt.toDate ? order.createdAt.toDate().toISOString() : new Date(order.createdAt).toISOString()) : null,
     }));
 
     return { success: true, data: orders };

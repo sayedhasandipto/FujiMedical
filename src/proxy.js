@@ -1,29 +1,40 @@
+// src/proxy.js
+// Layer 1: Proxy-level route guard for all /admin routes
 import { NextResponse } from "next/server";
 
-export async function proxy(request) {
-  const { pathname, origin } = request.nextUrl;
+export function proxy(request) {
+  const { pathname } = request.nextUrl;
 
-  // ১. /admin/login পেজটির ওপর কোনো বাধা থাকবে না (লুপ বা ৪০৪ বন্ধ করতে)
+  // ── EXCEPTION: /admin/login is always accessible (prevents redirect loop) ──
   if (pathname === "/admin/login") {
     return NextResponse.next();
   }
 
-  // ২. শুধুমাত্র /admin এবং এর সাব-রুটে ঢুকলে কুকি চেক হবে
-  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
+  // ── PROTECTED: all /admin routes require a valid admin_token cookie ──
+  const adminToken = request.cookies.get("admin_token")?.value;
 
-  if (isAdminRoute) {
-    // BetterAuth API এর বদলে আমাদের তৈরি করা সিকিউর admin_token চেক করা হচ্ছে
-    const adminToken = request.cookies.get("admin_token")?.value;
+  if (!adminToken || adminToken !== "authenticated") {
+    // Hard redirect — no layout, no children rendered at all
+    const loginUrl = new URL("/admin/login", request.nextUrl.origin);
 
-    // টোকেন না থাকলে সরাসরি Secret Admin Login পেজে পাঠাবে
-    if (!adminToken) {
-      return NextResponse.redirect(new URL("/admin/login", origin));
-    }
+    const response = NextResponse.redirect(loginUrl);
+
+    // Wipe any stale/tampered cookie immediately
+    response.cookies.set("admin_token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 0,
+      path: "/",
+    });
+
+    return response;
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  // Exact matcher per requirements: covers /admin and every sub-path
+  matcher: ["/admin", "/admin/:path*"],
 };

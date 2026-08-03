@@ -1,13 +1,29 @@
 import { NextResponse } from "next/server";
-import { getCollection } from "@/lib/db";
+import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { ObjectId } from "mongodb";
+import { collection, getDocs, addDoc } from "firebase/firestore";
 
 export async function GET() {
   try {
-    const productsCol = await getCollection("products");
-    const products = await productsCol.find({}).sort({ createdAt: -1 }).toArray();
+    const productsSnapshot = await getDocs(collection(db, "products"));
+    const products = [];
+    productsSnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      products.push({
+        _id: docSnap.id,
+        ...data,
+        createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().toISOString() : new Date(data.createdAt).toISOString()) : null,
+        updatedAt: data.updatedAt ? (data.updatedAt.toDate ? data.updatedAt.toDate().toISOString() : new Date(data.updatedAt).toISOString()) : null,
+      });
+    });
+
+    products.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+      const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+      return dateB - dateA;
+    });
+
     return NextResponse.json({ success: true, data: products });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -29,7 +45,6 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: "Name and price are required" }, { status: 400 });
     }
 
-    const productsCol = await getCollection("products");
     const newProduct = {
       name,
       description: description || "",
@@ -42,8 +57,8 @@ export async function POST(req) {
       updatedAt: new Date(),
     };
 
-    const result = await productsCol.insertOne(newProduct);
-    return NextResponse.json({ success: true, data: { _id: result.insertedId, ...newProduct } }, { status: 201 });
+    const docRef = await addDoc(collection(db, "products"), newProduct);
+    return NextResponse.json({ success: true, data: { _id: docRef.id, ...newProduct } }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

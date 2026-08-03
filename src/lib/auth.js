@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { MongoClient } from "mongodb";
 
-const client = new MongoClient(process.env.MONGODB_URI);
+const client = new MongoClient(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/fujimedicalhall");
 const db = client.db("fujimedicalhall");
 
 export const auth = betterAuth({

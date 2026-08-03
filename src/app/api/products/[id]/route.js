@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
-import { getCollection } from "@/lib/db";
+import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { ObjectId } from "mongodb";
+import {
+  doc,
+  getDoc,
+  getDocs,
+  collection,
+  updateDoc,
+  deleteDoc,
+} from "firebase/firestore";
 
 export async function GET(req, { params }) {
   try {
@@ -11,24 +18,25 @@ export async function GET(req, { params }) {
       return NextResponse.json({ success: false, error: "Product ID is required" }, { status: 400 });
     }
 
-    const productsCol = await getCollection("products");
     let product = null;
 
-    // 1. Try querying by MongoDB ObjectId
-    if (ObjectId.isValid(id)) {
-      product = await productsCol.findOne({ _id: new ObjectId(id) });
+    // 1. Try querying by direct document ID
+    const docRef = doc(db, "products", id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      product = {
+        _id: docSnap.id,
+        ...docSnap.data(),
+      };
     }
 
-    // 2. Fallback: Try querying by string _id
-    if (!product) {
-      product = await productsCol.findOne({ _id: id });
-    }
-
-    // 3. Fallback: If products are nested inside category documents (e.g. id like '6a6c..._0')
+    // 2. Fallback: If products are nested inside category documents (e.g. id like '6a6c..._0')
     if (!product && id.includes("_")) {
       const [docIdStr, idxStr] = id.split("_");
-      if (ObjectId.isValid(docIdStr)) {
-        const parentDoc = await productsCol.findOne({ _id: new ObjectId(docIdStr) });
+      const parentDocRef = doc(db, "products", docIdStr);
+      const parentDocSnap = await getDoc(parentDocRef);
+      if (parentDocSnap.exists()) {
+        const parentDoc = parentDocSnap.data();
         if (parentDoc && Array.isArray(parentDoc.products)) {
           const itemIdx = Number(idxStr);
           const item = parentDoc.products[itemIdx];
@@ -52,13 +60,14 @@ export async function GET(req, { params }) {
       }
     }
 
-    // 4. Fallback: Search all documents for matching product inside array or flat item
+    // 3. Fallback: Search all documents for matching product inside array or flat item
     if (!product) {
-      const allDocs = await productsCol.find({}).toArray();
-      for (const doc of allDocs) {
-        if (Array.isArray(doc.products)) {
-          const matchedItem = doc.products.find(
-            (p, idx) => p._id?.toString() === id || `${doc._id.toString()}_${idx}` === id
+      const productsSnapshot = await getDocs(collection(db, "products"));
+      for (const docSnap of productsSnapshot.docs) {
+        const d = docSnap.data();
+        if (Array.isArray(d.products)) {
+          const matchedItem = d.products.find(
+            (p, idx) => p._id?.toString() === id || `${docSnap.id}_${idx}` === id
           );
           if (matchedItem) {
             product = {
@@ -66,7 +75,7 @@ export async function GET(req, { params }) {
               name: matchedItem.name,
               brand: matchedItem.brand || "",
               genericName: matchedItem.genericName || "",
-              category: doc.category || matchedItem.category || "General",
+              category: d.category || matchedItem.category || "General",
               price: Number(matchedItem.price) || 0,
               offerPrice: matchedItem.offerPrice ? Number(matchedItem.offerPrice) : null,
               stock: Number(matchedItem.stock) || 0,
@@ -117,12 +126,8 @@ export async function PUT(req, { params }) {
     if (body.category !== undefined) updateObj.category = body.category;
     if (body.image !== undefined) updateObj.image = body.image;
 
-    const productsCol = await getCollection("products");
-    if (ObjectId.isValid(id)) {
-      await productsCol.updateOne({ _id: new ObjectId(id) }, { $set: updateObj });
-    } else {
-      await productsCol.updateOne({ _id: id }, { $set: updateObj });
-    }
+    const docRef = doc(db, "products", id);
+    await updateDoc(docRef, updateObj);
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -139,12 +144,8 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ success: false, error: "Unauthorized: Admin access required" }, { status: 403 });
     }
 
-    const productsCol = await getCollection("products");
-    if (ObjectId.isValid(id)) {
-      await productsCol.deleteOne({ _id: new ObjectId(id) });
-    } else {
-      await productsCol.deleteOne({ _id: id });
-    }
+    const docRef = doc(db, "products", id);
+    await deleteDoc(docRef);
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

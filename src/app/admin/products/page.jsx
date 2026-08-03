@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   getProducts,
   createProduct,
@@ -8,6 +9,9 @@ import {
   deleteProduct,
 } from "@/app/actions/productActions";
 import { getCategories } from "@/app/actions/categoryActions";
+import { storage, auth, database } from "@/lib/firebase";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref as dbRef, push } from "firebase/database";
 import {
   FiPlus,
   FiEdit2,
@@ -26,6 +30,7 @@ import {
 } from "react-icons/fi";
 
 export default function AdminProductsPage() {
+  const router = useRouter();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +41,7 @@ export default function AdminProductsPage() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [imageFile, setImageFile] = useState(null);
   
   // Image Upload Mode: 'file' | 'url'
   const [imageMode, setImageMode] = useState("file");
@@ -102,11 +108,8 @@ export default function AdminProductsPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setForm((prev) => ({ ...prev, image: reader.result }));
-    };
-    reader.readAsDataURL(file);
+    setImageFile(file);
+    setForm((prev) => ({ ...prev, image: URL.createObjectURL(file) }));
   };
 
   const handleSubmit = async (e) => {
@@ -120,23 +123,71 @@ export default function AdminProductsPage() {
       return;
     }
 
+    // Security Guard: verify Firebase Auth session before any write
+    if (!auth.currentUser) {
+      setErrorMsg("Session expired. Please log in again.");
+      router.push("/admin/login");
+      return;
+    }
+
     setSubmitting(true);
     setErrorMsg("");
 
-    let res;
-    if (editingProduct) {
-      res = await updateProduct(editingProduct._id, form);
-    } else {
-      res = await createProduct(form);
-    }
+    try {
+      // 1. Upload image to Firebase Storage (products/ folder)
+      let imageUrl = form.image || "";
+      if (imageMode === "file" && imageFile) {
+        const sRef = storageRef(storage, `products/${Date.now()}_${imageFile.name}`);
+        const uploadResult = await uploadBytes(sRef, imageFile);
+        imageUrl = await getDownloadURL(uploadResult.ref);
+      }
 
-    setSubmitting(false);
+      // 2. Build the canonical product object
+      const productData = {
+        name: form.name.trim(),
+        price: Number(form.price),
+        offerPrice: form.offerPrice ? Number(form.offerPrice) : null,
+        category: form.category || "General",
+        description: form.description?.trim() || "",
+        stock: Number(form.stock) || 0,
+        imageUrl,
+        image: imageUrl,
+        createdAt: Date.now(),
+      };
 
-    if (res.success) {
-      setShowModal(false);
-      loadData();
-    } else {
-      setErrorMsg(res.error || "Failed to save product.");
+      if (editingProduct) {
+        // For edits: still delegate to Server Action
+        const submissionForm = { ...form, image: imageUrl, imageUrl };
+        const res = await updateProduct(editingProduct._id, submissionForm);
+        setSubmitting(false);
+        if (res.success) {
+          setShowModal(false);
+          setImageFile(null);
+          loadData();
+        } else {
+          setErrorMsg(res.error || "Failed to update product.");
+        }
+      } else {
+        // 3. Push new product to Firebase Realtime Database under "products"
+        await push(dbRef(database, "products"), productData);
+
+        setSubmitting(false);
+        setShowModal(false);
+        setImageFile(null);
+        setForm({
+          name: "",
+          description: "",
+          price: "",
+          offerPrice: "",
+          stock: "10",
+          category: categories[0]?.name || "",
+          image: "",
+        });
+        loadData();
+      }
+    } catch (err) {
+      setSubmitting(false);
+      setErrorMsg("Error: " + err.message);
     }
   };
 

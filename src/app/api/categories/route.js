@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
-import { getCollection } from "@/lib/db";
+import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { collection, getDocs, addDoc } from "firebase/firestore";
 
 export async function GET() {
   try {
-    const categoriesCol = await getCollection("categories");
-    const categories = await categoriesCol.find({}).toArray();
+    const querySnapshot = await getDocs(collection(db, "categories"));
+    const categories = [];
+    querySnapshot.forEach((docSnap) => {
+      categories.push({
+        _id: docSnap.id,
+        ...docSnap.data(),
+      });
+    });
     return NextResponse.json({ success: true, data: categories });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -28,7 +35,6 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: "Category name is required" }, { status: 400 });
     }
 
-    const categoriesCol = await getCollection("categories");
     const newCategory = {
       name,
       description: description || "",
@@ -36,8 +42,8 @@ export async function POST(req) {
       updatedAt: new Date(),
     };
 
-    const result = await categoriesCol.insertOne(newCategory);
-    return NextResponse.json({ success: true, data: { _id: result.insertedId, ...newCategory } }, { status: 201 });
+    const docRef = await addDoc(collection(db, "categories"), newCategory);
+    return NextResponse.json({ success: true, data: { _id: docRef.id, ...newCategory } }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

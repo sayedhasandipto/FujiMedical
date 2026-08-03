@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
-    const { password } = await req.json();
-    const correctPassword = process.env.ADMIN_SECRET_PASSWORD;
+    const { email } = await req.json();
 
-    if (password && password === correctPassword) {
+    // ইমেইল থাকলেই (ফায়ারবেস দ্বারা অথেন্টিকেট হওয়ার পর) কুকি সেট করা হবে
+    if (email) {
       const response = NextResponse.json({
         success: true,
         message: "Logged in successfully",
@@ -23,8 +23,8 @@ export async function POST(req) {
     }
 
     return NextResponse.json(
-      { success: false, message: "Invalid Password" },
-      { status: 401 },
+      { success: false, message: "Email is required" },
+      { status: 400 },
     );
   } catch (error) {
     return NextResponse.json(
