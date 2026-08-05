@@ -22,6 +22,8 @@ import {
   FiPercent,
   FiDollarSign,
   FiLayers,
+  FiAlertTriangle,
+  FiTrash2,
 } from "react-icons/fi";
 import ProductList from "@/component/ProductList";
 
@@ -203,6 +205,7 @@ export default function AdminProductsPage() {
 
   // Opens the custom confirmation modal instead of native confirm()
   const handleDeleteClick = (product) => {
+    setErrorMsg("");
     setDeleteTarget(product);
   };
 
@@ -210,6 +213,7 @@ export default function AdminProductsPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
+    setErrorMsg("");
     const res = await deleteProduct(deleteTarget._id);
     setDeleting(false);
 
@@ -218,7 +222,6 @@ export default function AdminProductsPage() {
       loadData();
     } else {
       setErrorMsg(res.error || "Failed to delete product.");
-      setDeleteTarget(null);
     }
   };
 
@@ -570,6 +573,11 @@ export default function AdminProductsPage() {
       {deleteTarget && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+            {errorMsg && (
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                {errorMsg}
+              </div>
+            )}
             <div className="flex items-start gap-4">
               <div className="w-11 h-11 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center shrink-0">
                 <FiAlertTriangle className="w-5 h-5" />

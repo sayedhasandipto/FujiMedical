@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
 import { cookies } from "next/headers";
-import { ref, get, update, remove } from "firebase/database";
 
 // Admin Verification using HTTP-only Cookie (same system as the rest of the project)
 async function verifyAdmin() {
@@ -38,23 +36,30 @@ export async function GET(req, { params }) {
       );
     }
 
-    const productRef = ref(db, `products/${id}`);
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return NextResponse.json(
+        { success: false, error: "Database URL not configured" },
+        { status: 500 },
+      );
+    }
 
-    const getPromise = get(productRef);
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Database read timed out")), 8000),
-    );
+    const res = await fetch(`${DB_URL}/products/${id}.json`, { cache: "no-store" });
 
-    const snapshot = await Promise.race([getPromise, timeoutPromise]);
+    if (!res.ok) {
+      throw new Error(`Firebase REST error: ${res.status}`);
+    }
 
-    if (!snapshot.exists()) {
+    const data = await res.json();
+
+    if (!data) {
       return NextResponse.json(
         { success: false, error: "Product not found" },
         { status: 404 },
       );
     }
 
-    const product = normalizeProduct(id, snapshot.val());
+    const product = normalizeProduct(id, data);
 
     return NextResponse.json({
       success: true,
@@ -99,7 +104,24 @@ export async function PUT(req, { params }) {
     if (body.prescriptionRequired !== undefined)
       updateObj.prescriptionRequired = body.prescriptionRequired;
 
-    await update(ref(db, `products/${id}`), updateObj);
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return NextResponse.json(
+        { success: false, error: "Database URL not configured" },
+        { status: 500 },
+      );
+    }
+
+    const patchRes = await fetch(`${DB_URL}/products/${id}.json`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updateObj),
+    });
+
+    if (!patchRes.ok) {
+      const errText = await patchRes.text();
+      throw new Error(`Firebase REST error ${patchRes.status}: ${errText}`);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -122,7 +144,22 @@ export async function DELETE(req, { params }) {
       );
     }
 
-    await remove(ref(db, `products/${id}`));
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return NextResponse.json(
+        { success: false, error: "Database URL not configured" },
+        { status: 500 },
+      );
+    }
+
+    const deleteRes = await fetch(`${DB_URL}/products/${id}.json`, {
+      method: "DELETE",
+    });
+
+    if (!deleteRes.ok) {
+      const errText = await deleteRes.text();
+      throw new Error(`Firebase REST error ${deleteRes.status}: ${errText}`);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
