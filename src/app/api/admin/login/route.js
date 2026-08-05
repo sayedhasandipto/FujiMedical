@@ -19,6 +19,14 @@ export async function POST(req) {
         path: "/",
       });
 
+      response.cookies.set("admin_logged_in", "true", {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 60 * 60 * 24, // 1 day
+        path: "/",
+      });
+
       return response;
     }
 

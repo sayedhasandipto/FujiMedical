@@ -47,11 +47,10 @@ import { getProducts } from "@/app/actions/productActions";
 import { getCategories } from "@/app/actions/categoryActions";
 import { useCart } from "@/context/CartContext";
 import ProductCard from "@/component/ProductCard";
+import BannerSlider from "@/component/BannerSlider";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("home");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [activeService, setActiveService] = useState("Store");
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -64,11 +63,30 @@ export default function Home() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const filteredCategories = categories.filter((cat) =>
+    cat.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch =
+      p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.genericName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesCategory =
+      !selectedCategory ||
+      (p.category &&
+        p.category.toLowerCase() === selectedCategory.name?.toLowerCase());
+
+    return matchesSearch && matchesCategory;
+  });
+
   const carouselSlides = [
     {
       title: "Safe & Reliable Home Lab Tests",
       desc: "Sample collection at your doorstep. Reports in 24 hours.",
-      bgClass: "slide-bg-1",
+      bgClass: "bg-gradient-to-r from-emerald-800 to-teal-700",
       btnText: "Book Now",
       action: () => setIsBookModalOpen(true),
       image:
@@ -77,7 +95,7 @@ export default function Home() {
     {
       title: "Wholesale Medicines at Best Prices",
       desc: "Get genuine prescription drugs and OTC medicines in bulk.",
-      bgClass: "slide-bg-2",
+      bgClass: "bg-gradient-to-r from-teal-800 to-cyan-700",
       btnText: "Browse Store",
       action: () => setActiveService("Store"),
       image:
@@ -86,7 +104,7 @@ export default function Home() {
     {
       title: "Instant Video Consultation",
       desc: "Connect with certified medical practitioners online within 10 minutes.",
-      bgClass: "slide-bg-3",
+      bgClass: "bg-gradient-to-r from-emerald-800 via-teal-850 to-emerald-900",
       btnText: "Consult Now",
       action: () => setActiveService("Consult"),
       image:
@@ -109,33 +127,6 @@ export default function Home() {
     loadLiveData();
   }, []);
 
-  // Carousel timer
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % carouselSlides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [carouselSlides.length]);
-
-  const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const filteredProducts = products.filter((p) => {
-    const matchesSearch =
-      p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.genericName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.category?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesCategory =
-      !selectedCategory ||
-      (p.category &&
-        p.category.toLowerCase() === selectedCategory.name?.toLowerCase());
-
-    return matchesSearch && matchesCategory;
-  });
-
   const handleBookSubmit = (e) => {
     e.preventDefault();
     setIsBookModalOpen(false);
@@ -146,63 +137,7 @@ export default function Home() {
     <div className="flex-1 flex flex-col pb-24 min-h-screen text-zinc-800 dark:text-zinc-100">
       <main className="max-w-container-max mx-auto w-full px-3 md:px-8">
         {/* Hero Carousel Section */}
-        <section className="relative overflow-hidden rounded-3xl h-44 md:h-72 mt-10 max-sm:mt-5 group border border-emerald-100/40 dark:border-zinc-800/80">
-          <div
-            className="flex transition-transform duration-700 ease-in-out h-full"
-            style={{
-              transform: `translateX(-${currentSlide * 100}%)`,
-              width: `${carouselSlides.length * 100}%`,
-            }}
-          >
-            {carouselSlides.map((slide, idx) => (
-              <div
-                key={idx}
-                className={`w-full h-full relative flex items-center p-6 md:p-12 overflow-hidden select-none shrink-0 min-w-full ${slide.bgClass}`}
-              >
-                <div className="z-10 text-white max-w-[60%] md:max-w-[55%] flex flex-col items-start gap-1.5 md:gap-3">
-                  <span className="bg-white/20 text-white text-[8px] md:text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider backdrop-blur-sm">
-                    Featured Service
-                  </span>
-                  <h2 className="font-headline-lg text-sm md:text-3xl font-extrabold tracking-tight leading-tight text-white drop-shadow-sm">
-                    {slide.title}
-                  </h2>
-                  <p className="font-body-md text-xs md:text-sm opacity-90 leading-relaxed max-w-md hidden sm:block">
-                    {slide.desc}
-                  </p>
-                  <button
-                    onClick={slide.action}
-                    className="mt-1 md:mt-2.5 bg-white text-emerald-800 hover:bg-emerald-50 hover:scale-[1.02] active:scale-[0.98] px-3.5 py-1.5 md:px-5 md:py-2 rounded-xl font-bold text-[10px] md:text-xs transition-all duration-300 flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <span>{slide.btnText}</span>
-                    <MdArrowForward size={12} className="md:w-3.5 md:h-3.5" />
-                  </button>
-                </div>
-                <div className="absolute right-2 bottom-0 w-[42%] md:w-[48%] h-full flex items-end justify-end pointer-events-none">
-                  <img
-                    className="w-full h-[90%] md:h-[95%] object-contain object-right-bottom transition-all duration-700"
-                    alt={slide.title}
-                    src={slide.image}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-            {carouselSlides.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentSlide(idx)}
-                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                  currentSlide === idx
-                    ? "w-5 bg-white"
-                    : "w-1.5 bg-white/45 hover:bg-white/65"
-                }`}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            ))}
-          </div>
-        </section>
+        <BannerSlider slides={carouselSlides} />
 
         {/* Categories Section */}
         <section id="categories-section" className="py-6">

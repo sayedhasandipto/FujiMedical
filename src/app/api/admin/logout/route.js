@@ -16,6 +16,15 @@ export async function POST() {
       path: "/",
     });
 
+    // Clear the companion client-accessible cookie
+    response.cookies.set("admin_logged_in", "", {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 0,
+      path: "/",
+    });
+
     return response;
   } catch (error) {
     return NextResponse.json(

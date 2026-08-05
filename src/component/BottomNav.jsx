@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FiHome, FiGrid, FiTruck, FiShoppingBag, FiFileText } from "react-icons/fi";
@@ -9,7 +9,36 @@ import { useCart } from "@/context/CartContext";
 export default function BottomNav() {
   const pathname = usePathname();
   const { totalCount } = useCart();
+  const [isAdmin, setIsAdmin] = useState(false);
 
+  useEffect(() => {
+    const checkAdminSession = () => {
+      if (typeof document === "undefined") return;
+
+      const cookies = document.cookie.split(";").reduce((acc, cookie) => {
+        const [key, value] = cookie.trim().split("=");
+        if (key) acc[key.trim()] = value;
+        return acc;
+      }, {});
+
+      // Check for the presence of the admin_token cookie or the companion cookie
+      const hasAdmin = 
+        cookies.admin_token === "authenticated" || 
+        cookies.admin_logged_in === "true";
+
+      setIsAdmin(hasAdmin);
+    };
+
+    checkAdminSession();
+
+    // Sync state when page changes focus (e.g. logging in/out in another tab)
+    window.addEventListener("focus", checkAdminSession);
+    return () => {
+      window.removeEventListener("focus", checkAdminSession);
+    };
+  }, [pathname]);
+
+  // Standard items for all users
   const navItems = [
     {
       label: "Home",
@@ -32,12 +61,16 @@ export default function BottomNav() {
       icon: FiShoppingBag,
       badge: totalCount,
     },
-    {
+  ];
+
+  // Dynamically append the Admin tab as the 5th item if logged in
+  if (isAdmin) {
+    navItems.push({
       label: "Admin",
       href: "/admin",
       icon: FiFileText,
-    },
-  ];
+    });
+  }
 
   return (
     <div className="block md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800/80 shadow-[0_-4px_16px_rgba(0,0,0,0.04)] px-2 pb-safe">

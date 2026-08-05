@@ -140,22 +140,38 @@ function OrderCard({ order, onStatusChange, addToast }) {
       {/* ── Collapsed header ── */}
       <div
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center justify-between px-5 py-4 cursor-pointer select-none hover:bg-slate-800/40 transition-colors gap-3 flex-wrap rounded-2xl"
+        className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-4 sm:px-5 cursor-pointer select-none hover:bg-slate-800/40 transition-colors gap-3 rounded-2xl"
       >
-        {/* Left: icon + ID + date */}
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-emerald-955/40 border border-emerald-900/30 flex items-center justify-center shrink-0">
-            <MdReceipt className="w-5 h-5 text-emerald-400" />
+        <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+          {/* Left: icon + ID + date */}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-955/40 border border-emerald-900/30 flex items-center justify-center shrink-0">
+              <MdReceipt className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-black text-slate-100 text-sm">
+                {order.orderId || "#" + order._id?.toString().slice(-8).toUpperCase()}
+              </p>
+              <p className="text-[11px] text-slate-500 font-medium mt-0.5">{createdAt}</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="font-black text-slate-100 text-sm">
-              {order.orderId || "#" + order._id?.toString().slice(-8).toUpperCase()}
-            </p>
-            <p className="text-[11px] text-slate-500 font-medium mt-0.5">{createdAt}</p>
+
+          {/* Right on mobile: arrow indicator */}
+          <div className="sm:hidden flex items-center gap-2">
+            <span className="font-black text-emerald-400 text-sm">৳{total.toFixed(2)}</span>
+            <MdKeyboardArrowDown
+              className={`w-5 h-5 text-slate-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+            />
           </div>
         </div>
 
-        {/* Center: customer + items */}
+        {/* Mobile customer details (visible only on mobile) */}
+        <div className="sm:hidden block text-xs space-y-1 mt-1 border-t border-slate-800/60 pt-2">
+          <p className="text-slate-300 font-semibold"><span className="text-slate-500">Customer:</span> {order.customerName || "—"}</p>
+          <p className="text-slate-400"><span className="text-slate-500">Items:</span> {itemCount} item{itemCount !== 1 ? "s" : ""}</p>
+        </div>
+
+        {/* Center (desktop only): customer + items */}
         <div className="hidden sm:block flex-1 px-4 min-w-0">
           <p className="text-sm font-bold text-slate-300 truncate">{order.customerName || "—"}</p>
           <p className="text-[11px] text-slate-500 mt-0.5">
@@ -163,13 +179,15 @@ function OrderCard({ order, onStatusChange, addToast }) {
           </p>
         </div>
 
-        {/* Right: badge + total + arrow */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Right (desktop only): badge + total */}
+        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 pt-2 sm:pt-0 border-t border-slate-800 sm:border-t-0">
           <StatusBadge status={order.status} />
-          <span className="font-black text-emerald-400 text-sm">৳{total.toFixed(2)}</span>
-          <MdKeyboardArrowDown
-            className={`w-5 h-5 text-slate-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-          />
+          <span className="hidden sm:inline font-black text-emerald-400 text-sm">৳{total.toFixed(2)}</span>
+          <div className="hidden sm:block">
+            <MdKeyboardArrowDown
+              className={`w-5 h-5 text-slate-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+            />
+          </div>
         </div>
       </div>
 
@@ -293,7 +311,7 @@ function OrderCard({ order, onStatusChange, addToast }) {
                 disabled={updating}
                 className="appearance-none pl-3 pr-8 py-2 rounded-xl border border-slate-700 bg-slate-800 text-slate-200 text-xs font-bold shadow-sm hover:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2500/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
                   backgroundRepeat: "no-repeat",
                   backgroundPosition: "right 0.5rem center",
                   backgroundSize: "1.2em 1.2em",
@@ -390,21 +408,21 @@ export default function AdminOrdersPage() {
       <Toast toasts={toasts} />
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-xl font-black text-white flex items-center gap-2.5">
-            <span className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center">
+      <div className="flex items-start justify-between gap-4 flex-wrap w-full">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl font-black text-white flex items-center gap-2.5">
+            <span className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0">
               <FiPackage className="w-4 h-4 text-emerald-400" />
             </span>
             Order Management
           </h1>
-          <p className="text-sm text-slate-400 mt-1 ml-10">
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 ml-10">
             View, track and update customer orders
           </p>
         </div>
         <button
           onClick={fetchOrders}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/20 transition-all cursor-pointer border border-emerald-500/25"
+          className="flex items-center justify-center gap-2 px-4 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/20 transition-all cursor-pointer border border-emerald-500/25 active:scale-95"
         >
           <MdRefresh className="w-4 h-4" />
           Refresh
@@ -412,11 +430,11 @@ export default function AdminOrdersPage() {
       </div>
 
       {/* ── Stats ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {statCards.map((s) => (
-          <div key={s.label} className={`${s.accent} border rounded-2xl p-4 shadow-sm`}>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{s.label}</p>
-            <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+          <div key={s.label} className={`${s.accent} border rounded-2xl p-3 sm:p-4 shadow-sm`}>
+            <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{s.label}</p>
+            <p className={`text-xl sm:text-2xl font-black ${s.color}`}>{s.value}</p>
           </div>
         ))}
       </div>
