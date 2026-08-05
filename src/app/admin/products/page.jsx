@@ -14,8 +14,6 @@ import { database } from "@/lib/firebase";
 import { ref as dbRef, push } from "firebase/database";
 import {
   FiPlus,
-  FiEdit2,
-  FiTrash2,
   FiBox,
   FiCheck,
   FiX,
@@ -23,12 +21,11 @@ import {
   FiLoader,
   FiUploadCloud,
   FiImage,
-  FiTag,
   FiPercent,
   FiDollarSign,
   FiLayers,
-  FiAlertTriangle,
 } from "react-icons/fi";
+import ProductList from "@/component/ProductList";
 
 export default function AdminProductsPage() {
   const router = useRouter();
@@ -303,225 +300,13 @@ export default function AdminProductsPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {/* Mobile view: Card lists */}
-          <div className="flex flex-col gap-4 md:hidden">
-            {filteredProducts.map((product) => {
-              const hasOffer =
-                product.offerPrice !== null &&
-                product.offerPrice !== undefined &&
-                Number(product.offerPrice) > 0;
-              return (
-                <div
-                  key={product._id}
-                  className="p-4 bg-slate-900 border border-slate-800 rounded-xl flex flex-col gap-3"
-                >
-                  <div className="flex gap-4">
-                    {product.image ? (
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-16 h-16 rounded-xl object-cover border border-slate-700/60 bg-slate-950 shrink-0"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-xl bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-500 shrink-0">
-                        <FiImage className="w-6 h-6" />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-white text-base truncate">
-                        {product.name}
-                      </p>
-                      <p className="text-xs text-slate-400 line-clamp-2 mt-1">
-                        {product.description || "No description provided"}
-                      </p>
-                      <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-emerald-400 border border-slate-700">
-                        <FiTag className="w-2.5 h-2.5" />
-                        {product.category || "Uncategorized"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-                    <div>
-                      <p className="text-xs text-slate-505 mb-0.5">Price</p>
-                      {hasOffer ? (
-                        <div className="flex items-center gap-2">
-                          <span className="text-emerald-400 font-bold text-sm">
-                            ${Number(product.offerPrice).toFixed(2)}
-                          </span>
-                          <span className="text-[9px] uppercase font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-1 rounded">
-                            Sale
-                          </span>
-                          <span className="text-slate-500 text-xs line-through">
-                            ${Number(product.price).toFixed(2)}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-white font-bold text-sm">
-                          ${Number(product.price).toFixed(2)}
-                        </span>
-                      )}
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-slate-505 text-right mb-1">Stock</p>
-                      {product.stock > 10 ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                          {product.stock} in stock
-                        </span>
-                      ) : product.stock > 0 ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                          Low: {product.stock} left
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
-                          Out of stock
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Actions Row */}
-                  <div className="flex items-center gap-3 mt-1 border-t border-slate-800/80 pt-3">
-                    <button
-                      onClick={() => handleOpenEdit(product)}
-                      className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-emerald-400 font-semibold text-sm transition"
-                      title="Edit Product"
-                    >
-                      <FiEdit2 className="w-4 h-4" /> Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(product)}
-                      className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 font-semibold text-sm transition"
-                      title="Delete Product"
-                    >
-                      <FiTrash2 className="w-4 h-4" /> Delete
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Desktop view: Table */}
-          <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-300">
-                <thead className="bg-slate-800/60 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-800">
-                  <tr>
-                    <th className="py-4 px-6 font-semibold">Product Info</th>
-                    <th className="py-4 px-6 font-semibold">Category</th>
-                    <th className="py-4 px-6 font-semibold">Price / Offer</th>
-                    <th className="py-4 px-6 font-semibold">Stock</th>
-                    <th className="py-4 px-6 font-semibold text-right">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60">
-                  {filteredProducts.map((product) => {
-                    const hasOffer =
-                      product.offerPrice !== null &&
-                      product.offerPrice !== undefined &&
-                      Number(product.offerPrice) > 0;
-                    return (
-                      <tr
-                        key={product._id}
-                        className="hover:bg-slate-800/40 transition"
-                      >
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-4">
-                            {product.image ? (
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className="w-12 h-12 rounded-xl object-cover border border-slate-700/60 bg-slate-950 shrink-0"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-500 shrink-0">
-                                <FiImage className="w-6 h-6" />
-                              </div>
-                            )}
-                            <div>
-                              <p className="font-semibold text-white text-base">
-                                {product.name}
-                              </p>
-                              <p className="text-xs text-slate-400 max-w-xs truncate mt-0.5">
-                                {product.description || "No description provided"}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="py-4 px-6">
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-800 text-emerald-400 border border-slate-700">
-                            <FiTag className="w-3 h-3" />
-                            {product.category || "Uncategorized"}
-                          </span>
-                        </td>
-
-                        <td className="py-4 px-6">
-                          {hasOffer ? (
-                            <div className="space-y-0.5">
-                              <div className="text-emerald-400 font-bold text-base flex items-center gap-1">
-                                ${Number(product.offerPrice).toFixed(2)}
-                                <span className="text-[10px] uppercase font-bold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded">
-                                  Sale
-                                </span>
-                              </div>
-                              <div className="text-slate-500 text-xs line-through">
-                                ${Number(product.price).toFixed(2)}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-white font-bold text-base">
-                              ${Number(product.price).toFixed(2)}
-                            </div>
-                          )}
-                        </td>
-
-                        <td className="py-4 px-6">
-                          {product.stock > 10 ? (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                              {product.stock} in stock
-                            </span>
-                          ) : product.stock > 0 ? (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                              Low: {product.stock} left
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
-                              Out of stock
-                            </span>
-                          )}
-                        </td>
-
-                        <td className="py-4 px-6 text-right space-x-2">
-                          <button
-                            onClick={() => handleOpenEdit(product)}
-                            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-emerald-400 transition"
-                            title="Edit Product"
-                          >
-                            <FiEdit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(product)}
-                            className="p-2 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 transition"
-                            title="Delete Product"
-                          >
-                            <FiTrash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <ProductList
+          products={filteredProducts}
+          onEdit={handleOpenEdit}
+          onDelete={handleDeleteClick}
+        />
       )}
+
 
       {/* Add / Edit Modal Form */}
       {showModal && (

@@ -3,7 +3,14 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiHome, FiGrid, FiTruck, FiShoppingBag, FiFileText } from "react-icons/fi";
+import {
+  FiHome,
+  FiGrid,
+  FiTruck,
+  FiShoppingBag,
+  FiShield,
+  FiUser,
+} from "react-icons/fi";
 import { useCart } from "@/context/CartContext";
 
 export default function BottomNav() {
@@ -11,6 +18,7 @@ export default function BottomNav() {
   const { totalCount } = useCart();
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Detect admin session from cookies
   useEffect(() => {
     const checkAdminSession = () => {
       if (typeof document === "undefined") return;
@@ -21,9 +29,8 @@ export default function BottomNav() {
         return acc;
       }, {});
 
-      // Check for the presence of the admin_token cookie or the companion cookie
-      const hasAdmin = 
-        cookies.admin_token === "authenticated" || 
+      const hasAdmin =
+        cookies.admin_token === "authenticated" ||
         cookies.admin_logged_in === "true";
 
       setIsAdmin(hasAdmin);
@@ -31,95 +38,154 @@ export default function BottomNav() {
 
     checkAdminSession();
 
-    // Sync state when page changes focus (e.g. logging in/out in another tab)
+    // Re-check when the tab regains focus (e.g. after login in another tab)
     window.addEventListener("focus", checkAdminSession);
     return () => {
       window.removeEventListener("focus", checkAdminSession);
     };
   }, [pathname]);
 
-  // Standard items for all users
+  /** 5 permanent nav tabs — 5th slot switches between Admin and Account */
   const navItems = [
     {
       label: "Home",
       href: "/",
       icon: FiHome,
+      // Active only on exact home route
+      isActive: pathname === "/",
     },
     {
       label: "Categories",
       href: "/categories",
       icon: FiGrid,
+      isActive: pathname === "/categories" || pathname.startsWith("/categories/"),
     },
     {
       label: "Track Order",
       href: "/track-order",
       icon: FiTruck,
+      isActive: pathname === "/track-order",
     },
     {
       label: "Cart",
       href: "/cart",
       icon: FiShoppingBag,
+      isActive: pathname === "/cart",
       badge: totalCount,
     },
+    // 5th slot: Admin panel when logged in, otherwise Account/Login
+    isAdmin
+      ? {
+          label: "Admin",
+          href: "/admin",
+          icon: FiShield,
+          isActive:
+            pathname === "/admin" || pathname.startsWith("/admin"),
+        }
+      : {
+          label: "Account",
+          href: "/admin/login",
+          icon: FiUser,
+          isActive: pathname === "/admin/login",
+        },
   ];
 
-  // Dynamically append the Admin tab as the 5th item if logged in
-  if (isAdmin) {
-    navItems.push({
-      label: "Admin",
-      href: "/admin",
-      icon: FiFileText,
-    });
-  }
-
   return (
-    <div className="block md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800/80 shadow-[0_-4px_16px_rgba(0,0,0,0.04)] px-2 pb-safe">
-      <div className="flex items-center justify-between max-w-lg mx-auto h-16">
+    <nav
+      aria-label="Mobile bottom navigation"
+      className="
+        block md:hidden
+        fixed bottom-0 left-0 right-0 z-50
+        bg-white/80 dark:bg-slate-950/85
+        backdrop-blur-xl
+        border-t border-slate-200/70 dark:border-slate-800/80
+        shadow-[0_-4px_24px_rgba(0,0,0,0.06)]
+        pb-safe
+      "
+    >
+      <div className="flex items-stretch justify-around max-w-lg mx-auto h-16 px-1">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = item.icon;
+          const { label, href, icon: Icon, isActive, badge } = item;
 
           return (
             <Link
-              key={item.label}
-              href={item.href}
-              className="flex-1 flex flex-col items-center justify-center h-full py-1 text-center relative select-none"
+              key={label}
+              href={href}
+              className="
+                relative flex-1 flex flex-col items-center justify-center
+                gap-0.5 py-1
+                select-none tap-highlight-transparent
+                group
+              "
+              aria-label={label}
+              aria-current={isActive ? "page" : undefined}
             >
-              <div
-                className={`flex items-center justify-center p-1 rounded-xl transition-all duration-300 ${
-                  isActive
-                    ? "text-emerald-600 dark:text-emerald-400 scale-105"
-                    : "text-slate-500 dark:text-slate-400 active:scale-95"
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                
-                {/* Cart Quantity Badge */}
-                {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute top-2.5 right-1/2 translate-x-4 bg-emerald-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-white dark:border-slate-900 animate-pulse">
-                    {item.badge}
+              {/* ── Active tab top-bar indicator ── */}
+              <span
+                className={`
+                  absolute top-0 left-1/2 -translate-x-1/2
+                  h-[2.5px] rounded-full
+                  transition-all duration-300
+                  ${
+                    isActive
+                      ? "w-8 bg-emerald-500 opacity-100"
+                      : "w-0 bg-emerald-500 opacity-0"
+                  }
+                `}
+              />
+
+              {/* ── Icon + Badge wrapper ── */}
+              <div className="relative">
+                <Icon
+                  className={`
+                    w-[22px] h-[22px]
+                    transition-all duration-300
+                    ${
+                      isActive
+                        ? "text-emerald-500 dark:text-emerald-400 scale-110"
+                        : "text-slate-400 dark:text-slate-500 group-active:scale-90"
+                    }
+                  `}
+                />
+
+                {/* Cart count badge */}
+                {badge !== undefined && badge > 0 && (
+                  <span
+                    className="
+                      absolute -top-2 -right-2.5
+                      min-w-[18px] h-[18px] px-1
+                      rounded-full
+                      bg-emerald-500 text-white
+                      text-[9px] font-black
+                      flex items-center justify-center
+                      border-[1.5px] border-white dark:border-slate-950
+                      shadow-sm
+                      leading-none
+                    "
+                  >
+                    {badge > 99 ? "99+" : badge}
                   </span>
                 )}
               </div>
-              
-              <span
-                className={`text-[10px] font-black tracking-tight transition-colors duration-300 mt-0.5 ${
-                  isActive
-                    ? "text-emerald-600 dark:text-emerald-400 font-extrabold"
-                    : "text-slate-500 dark:text-slate-400"
-                }`}
-              >
-                {item.label}
-              </span>
 
-              {/* Active Bar Indicator */}
-              {isActive && (
-                <span className="absolute bottom-1 w-1 h-1 rounded-full bg-emerald-600 dark:bg-emerald-400 transition-all duration-300" />
-              )}
+              {/* ── Tab label ── */}
+              <span
+                className={`
+                  text-[10px] font-bold tracking-tight leading-none
+                  transition-all duration-300
+                  ${
+                    isActive
+                      ? "text-emerald-500 dark:text-emerald-400"
+                      : "text-slate-400 dark:text-slate-500"
+                  }
+                `}
+              >
+                {label}
+              </span>
             </Link>
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 }
