@@ -1,7 +1,6 @@
 "use server";
 
-import { db } from "@/lib/firebase";
-import { ref, get } from "firebase/database";
+const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
 
 // Searches orders by Order ID (e.g. "FM-123456") or phone number.
 // No login required — matches the customer-facing TrackOrderPage.
@@ -16,14 +15,22 @@ export async function trackOrder(query) {
       };
     }
 
-    const ordersRef = ref(db, "orders");
-    const snapshot = await get(ordersRef);
+    if (!DB_URL) {
+      return { success: false, error: "Database not configured." };
+    }
 
-    if (!snapshot.exists()) {
+    const res = await fetch(`${DB_URL}/orders.json`, { cache: "no-store" });
+
+    if (!res.ok) {
+      throw new Error(`Firebase REST error: ${res.status}`);
+    }
+
+    const ordersData = await res.json();
+
+    if (!ordersData) {
       return { success: false, error: "No orders found." };
     }
 
-    const ordersData = snapshot.val();
     const queryLower = trimmedQuery.toLowerCase();
 
     const matches = Object.entries(ordersData)
@@ -39,8 +46,6 @@ export async function trackOrder(query) {
       })
       .map((order) => ({
         ...order,
-        // Normalize status field — some orders may have been saved as
-        // "orderStatus" instead of "status"
         status: order.status || order.orderStatus || "Pending",
       }));
 

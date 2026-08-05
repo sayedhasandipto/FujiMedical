@@ -1,8 +1,6 @@
 "use server";
 
-import { db } from "@/lib/firebase";
 import { revalidatePath } from "next/cache";
-import { ref, get, push, set, update } from "firebase/database";
 
 const SERVER_URL =
   process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
@@ -60,6 +58,7 @@ export async function createOrder(orderData) {
         ? "Pending Verification (bKash)"
         : "Unpaid (Cash on Delivery)",
       orderStatus: "Pending",
+      status: "Pending",
       createdAt: new Date().toISOString(),
     };
 
@@ -83,26 +82,25 @@ export async function createOrder(orderData) {
       );
     }
 
-    // Fallback: write directly to Realtime Database under "orders"
-    const ordersRef = ref(db, "orders");
-    const newOrderRef = push(ordersRef);
-    await set(newOrderRef, orderObj);
-
-    // Decrement product stock levels
-    try {
-      for (const item of cartItems) {
-        if (!item._id) continue;
-        const productRef = ref(db, `products/${item._id}`);
-        const snapshot = await get(productRef);
-        if (snapshot.exists()) {
-          const currentStock = Number(snapshot.val().stock) || 0;
-          const newStock = Math.max(0, currentStock - Number(item.quantity));
-          await update(productRef, { stock: newStock });
-        }
-      }
-    } catch (stockErr) {
-      console.warn("Stock update warning:", stockErr.message);
+    // Fallback: write directly to Firebase Realtime Database via REST API
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return { success: false, error: "Firebase database URL not configured" };
     }
+
+    const pushRes = await fetch(`${DB_URL}/orders.json`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderObj),
+    });
+
+    if (!pushRes.ok) {
+      const errText = await pushRes.text();
+      throw new Error(`Firebase REST error ${pushRes.status}: ${errText}`);
+    }
+
+    const pushData = await pushRes.json();
+    const newKey = pushData.name; // Firebase returns { name: "-abc123" }
 
     revalidatePath("/admin/orders");
     revalidatePath("/admin/products");
@@ -110,63 +108,40 @@ export async function createOrder(orderData) {
     return {
       success: true,
       data: {
-        _id: newOrderRef.key,
+        _id: newKey,
         ...orderObj,
       },
     };
   } catch (error) {
+    console.error("createOrder error:", error);
     return { success: false, error: error.message };
   }
 }
 
-export async function getUserOrders(email) {
-  try {
-    if (!email) {
-      return { success: false, error: "Email is required" };
-    }
-
-    const ordersRef = ref(db, "orders");
-    const snapshot = await get(ordersRef);
-
-    if (!snapshot.exists()) {
-      return { success: true, data: [] };
-    }
-
-    const ordersData = snapshot.val();
-    const trimmedEmail = email.trim().toLowerCase();
-
-    const orders = Object.entries(ordersData)
-      .map(([id, data]) => ({ _id: id, ...data }))
-      .filter(
-        (order) => (order.email || "").trim().toLowerCase() === trimmedEmail,
-      );
-
-    // Sort descending by createdAt
-    orders.sort((a, b) => {
-      const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
-      const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
-      return dateB - dateA;
-    });
-
-    return { success: true, data: orders };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-}
 
 export async function getAllOrders() {
   try {
-    const ordersRef = ref(db, "orders");
-    const snapshot = await get(ordersRef);
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return { success: false, error: "Firebase database URL not configured" };
+    }
 
-    if (!snapshot.exists()) {
+    const res = await fetch(`${DB_URL}/orders.json`, { cache: "no-store" });
+    if (!res.ok) {
+      throw new Error(`Firebase REST error: ${res.status}`);
+    }
+
+    const ordersData = await res.json();
+
+    if (!ordersData) {
       return { success: true, data: [] };
     }
 
-    const ordersData = snapshot.val();
     const orders = Object.entries(ordersData).map(([id, data]) => ({
       _id: id,
       ...data,
+      status: data.status || data.orderStatus || "Pending",
+      total: data.total ?? data.totalAmount ?? 0,
     }));
 
     orders.sort((a, b) => {
@@ -183,8 +158,28 @@ export async function getAllOrders() {
 
 export async function updateOrderStatus(id, orderStatus) {
   try {
-    await update(ref(db, `orders/${id}`), { orderStatus });
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return { success: false, error: "Firebase database URL not configured" };
+    }
+
+    const res = await fetch(`${DB_URL}/orders/${id}.json`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderStatus,
+        status: orderStatus,
+        updatedAt: new Date().toISOString(),
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Firebase REST error: ${res.status}`);
+    }
+
     revalidatePath("/admin/orders");
+    revalidatePath("/track-order");
+    revalidateTag("orders");
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };

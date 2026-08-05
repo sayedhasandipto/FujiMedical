@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 import { ref, get, push, update, remove, set } from "firebase/database";
 
@@ -98,6 +98,7 @@ export async function createCategory(data) {
       updatedAt: new Date().toISOString(),
     });
 
+    revalidateTag("categories");
     revalidatePath("/admin/categories");
     revalidatePath("/admin/products");
     revalidatePath("/categories");
@@ -134,6 +135,7 @@ export async function updateCategory(id, data) {
 
     await update(categoryRef, updateData);
 
+    revalidateTag("categories");
     revalidatePath("/admin/categories");
     revalidatePath("/admin/products");
     revalidatePath("/categories");
@@ -155,6 +157,7 @@ export async function deleteCategory(id) {
 
     await remove(ref(db, `categories/${id}`));
 
+    revalidateTag("categories");
     revalidatePath("/admin/categories");
     revalidatePath("/admin/products");
     revalidatePath("/categories");

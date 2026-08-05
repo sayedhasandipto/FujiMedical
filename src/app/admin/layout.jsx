@@ -4,21 +4,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FiHome, FiShield, FiLogOut } from "react-icons/fi";
 import AdminSidebarNav from "@/component/AdminSidebarNav";
-import { auth } from "@/lib/firebase";
-import { signOut } from "firebase/auth";
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      // 1. Sign out from Firebase Auth
-      await signOut(auth);
-
-      // 2. Clear the HTTP-only admin_token cookie via API
+      // Clear the HTTP-only admin_token cookie via API
       await fetch("/api/admin/logout", { method: "POST" });
-
-      // 3. Redirect to login
+      // Redirect to login
       router.push("/admin/login");
     } catch (err) {
       console.error("Logout error:", err.message);
@@ -49,7 +43,7 @@ export default function AdminLayout({ children }) {
           <AdminSidebarNav />
         </div>
 
-        {/* User + Storefront */}
+        {/* Footer */}
         <div className="p-4 border-t border-slate-800 space-y-3">
           <div className="flex items-center gap-2.5 px-3 py-2.5 bg-slate-800/60 rounded-xl border border-slate-700/50">
             <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-sm shrink-0">
@@ -72,7 +66,7 @@ export default function AdminLayout({ children }) {
 
           <button
             onClick={handleLogout}
-            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-red-900/30 hover:bg-red-900/60 text-red-400 hover:text-red-300 text-xs font-bold transition border border-red-900/50"
+            className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-red-900/30 hover:bg-red-900/60 text-red-400 hover:text-red-300 text-xs font-bold transition border border-red-900/50 cursor-pointer"
           >
             <FiLogOut className="w-3.5 h-3.5" /> Logout
           </button>

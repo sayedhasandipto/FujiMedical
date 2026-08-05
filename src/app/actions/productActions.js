@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/firebase";
 import { cookies } from "next/headers";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { ref, get, push, set, update, remove } from "firebase/database";
 
 const SERVER_URL =
@@ -135,6 +135,7 @@ export async function createProduct(data) {
     const newProductRef = push(productsRef);
     await set(newProductRef, payload);
 
+    revalidateTag("products");
     revalidatePath("/admin/products");
     revalidatePath("/");
     revalidatePath("/categories");
@@ -189,6 +190,7 @@ export async function updateProduct(id, data) {
 
     await update(ref(db, `products/${id}`), updateData);
 
+    revalidateTag("products");
     revalidatePath("/admin/products");
     revalidatePath("/");
     revalidatePath("/categories");
@@ -222,6 +224,7 @@ export async function deleteProduct(id) {
 
     await remove(ref(db, `products/${id}`));
 
+    revalidateTag("products");
     revalidatePath("/admin/products");
     revalidatePath("/");
     revalidatePath("/categories");

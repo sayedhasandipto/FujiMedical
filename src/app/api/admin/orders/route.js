@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
 import { cookies } from "next/headers";
-import { ref, get, update } from "firebase/database";
+
+const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
 
 // Admin Verification using HTTP-only Cookie (same system as the rest of the project)
 async function verifyAdmin() {
@@ -21,25 +21,36 @@ export async function GET() {
       );
     }
 
-    const ordersRef = ref(db, "orders");
-    const snapshot = await get(ordersRef);
-
-    if (!snapshot.exists()) {
-      return NextResponse.json({ orders: [] });
+    if (!DB_URL) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "NEXT_PUBLIC_FIREBASE_DATABASE_URL is not set",
+        },
+        { status: 500 },
+      );
     }
 
-    const ordersData = snapshot.val();
+    // Plain REST call — no persistent SDK connection, so it can't hang.
+    const res = await fetch(`${DB_URL}/orders.json`, { cache: "no-store" });
+
+    if (!res.ok) {
+      throw new Error(`Firebase REST error: ${res.status}`);
+    }
+
+    const ordersData = await res.json();
+
+    if (!ordersData) {
+      return NextResponse.json({ orders: [] });
+    }
 
     const orders = Object.entries(ordersData).map(([id, data]) => ({
       _id: id,
       ...data,
-      // Normalize status field: older orders may have been saved as
-      // "orderStatus", newer ones as "status" — always expose "status".
       status: data.status || data.orderStatus || "Pending",
       total: data.total ?? data.totalAmount ?? 0,
     }));
 
-    // Sort newest first
     orders.sort((a, b) => {
       const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
       const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
@@ -66,6 +77,16 @@ export async function PATCH(req) {
       );
     }
 
+    if (!DB_URL) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "NEXT_PUBLIC_FIREBASE_DATABASE_URL is not set",
+        },
+        { status: 500 },
+      );
+    }
+
     const { orderId, status } = await req.json();
 
     if (!orderId || !status) {
@@ -75,11 +96,25 @@ export async function PATCH(req) {
       );
     }
 
-    await update(ref(db, `orders/${orderId}`), {
-      status,
-      orderStatus: status, // kept in sync for backward compatibility
-      updatedAt: new Date().toISOString(),
+    const res = await fetch(`${DB_URL}/orders/${orderId}.json`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status,
+        orderStatus: status, // kept in sync for backward compatibility
+        updatedAt: new Date().toISOString(),
+      }),
     });
+
+    if (!res.ok) {
+      throw new Error(`Firebase REST error: ${res.status}`);
+    }
+
+    // Clear and force revalidation of caching across Next.js paths
+    const { revalidatePath, revalidateTag } = await import("next/cache");
+    revalidatePath("/admin/orders");
+    revalidatePath("/track-order");
+    revalidateTag("orders");
 
     return NextResponse.json({ success: true });
   } catch (error) {

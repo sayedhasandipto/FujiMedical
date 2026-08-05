@@ -5,21 +5,14 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   MdShoppingCart,
-  MdLogout,
-  MdKeyboardArrowDown,
-  MdShoppingBag,
-  MdPerson,
-  MdVerified,
-  MdMenu,
-  MdClose,
   MdSearch,
   MdFileUpload,
   MdPhoneInTalk,
   MdHome,
   MdCategory,
   MdReceiptLong,
-  MdAdminPanelSettings,
   MdCheckCircle,
+  MdClose,
 } from "react-icons/md";
 import { FaPrescriptionBottleAlt, FaStethoscope } from "react-icons/fa";
 import { useCart } from "@/context/CartContext";
@@ -30,9 +23,8 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-  
+
   // Suggestion overlay states
   const [allProducts, setAllProducts] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
@@ -44,12 +36,8 @@ export default function Navbar() {
   const [isUploadingPrescription, setIsUploadingPrescription] = useState(false);
   const [prescriptionSuccess, setPrescriptionSuccess] = useState(false);
 
-  const dropdownRef = useRef(null);
   const drawerRef = useRef(null);
   const suggestionRef = useRef(null);
-  const mobileSuggestionRef = useRef(null);
-
-
 
   // Load products list for client-side live search suggest
   useEffect(() => {
@@ -58,7 +46,6 @@ export default function Navbar() {
         const res = await fetch("/api/products");
         if (res.ok) {
           const json = await res.json();
-          // The API response might have products wrapped inside products object
           const data = json.products || json.data || json || [];
           setAllProducts(Array.isArray(data) ? data : []);
         }
@@ -85,12 +72,9 @@ export default function Navbar() {
     setSuggestions(filtered.slice(0, 5));
   }, [searchTerm, allProducts]);
 
-  // Close dropdowns & live search overlays on outside click
+  // Close live search overlay on outside click
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
       if (suggestionRef.current && !suggestionRef.current.contains(event.target)) {
         setShowSuggestions(false);
       }
@@ -107,8 +91,6 @@ export default function Navbar() {
       document.body.style.overflow = "unset";
     }
   }, [isMobileDrawerOpen, isPrescriptionModalOpen]);
-
-
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -160,12 +142,9 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop & Tablet Global Search Input (Center - md & lg) */}
+          {/* Desktop & Tablet Global Search Input */}
           <div className="hidden md:block flex-1 max-w-md mx-2 lg:mx-6 relative" ref={suggestionRef}>
-            <form
-              onSubmit={handleSearchSubmit}
-              className="relative w-full"
-            >
+            <form onSubmit={handleSearchSubmit} className="relative w-full">
               <button
                 type="submit"
                 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer flex items-center justify-center"
@@ -192,9 +171,9 @@ export default function Navbar() {
               </button>
             </form>
 
-            {/* Desktop Autocomplete Suggestions Dropdown Overlay */}
+            {/* Desktop Autocomplete Suggestions */}
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute left-0 right-0 mt-2 bg-white border border-emerald-100 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute left-0 right-0 mt-2 bg-white border border-emerald-100 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 max-h-64 overflow-y-auto">
                 {suggestions.map((product) => {
                   const imageSrc = product.image || `https://placehold.co/48x48/10b981/ffffff?text=${encodeURIComponent(product.name ? product.name.slice(0,2) : "M")}`;
                   return (
@@ -230,8 +209,6 @@ export default function Navbar() {
 
           {/* Desktop Nav Links + Actions (Right) */}
           <div className="flex items-center gap-2 sm:gap-3">
-            
-            {/* Desktop Horizontal Nav Links (lg:flex) */}
             <nav className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
@@ -249,11 +226,9 @@ export default function Navbar() {
                   </Link>
                 );
               })}
-
-
             </nav>
 
-            {/* Upload Prescription Button (Desktop & Tablet) */}
+            {/* Upload Prescription Button */}
             <button
               onClick={() => setIsPrescriptionModalOpen(true)}
               className="hidden sm:inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 px-3 py-1.5 rounded-full text-xs font-extrabold shadow-xs transition-all cursor-pointer hover:shadow-sm"
@@ -263,7 +238,7 @@ export default function Navbar() {
               <span>Upload Prescription</span>
             </button>
 
-            {/* Cart Icon Trigger */}
+            {/* Cart Icon */}
             <Link
               href="/cart"
               className="relative p-2 rounded-full hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 transition-all group shrink-0"
@@ -276,21 +251,15 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
-
-            {/* Auth Buttons / Profile Dropdown (Desktop & Mobile) */}
-
-
-
           </div>
         </div>
 
-        {/* ── Compact Mobile Search Bar (Directly below header - < md) ── */}
+        {/* Compact Mobile Search Bar */}
         <div className="block md:hidden bg-emerald-50/50 border-t border-emerald-100/60 px-3 py-2 relative">
           <form onSubmit={handleSearchSubmit} className="relative w-full">
             <button
               type="submit"
               className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer flex items-center justify-center"
-              title="Search button"
             >
               <MdSearch className="text-base" />
             </button>
@@ -312,153 +281,12 @@ export default function Navbar() {
               Search
             </button>
           </form>
-
-          {/* Mobile Autocomplete Suggestions Dropdown Overlay */}
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute left-3 right-3 mt-1.5 bg-white border border-emerald-100 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-150">
-              {suggestions.map((product) => {
-                const imageSrc = product.image || `https://placehold.co/48x48/10b981/ffffff?text=${encodeURIComponent(product.name ? product.name.slice(0,2) : "M")}`;
-                return (
-                  <Link
-                    key={product._id}
-                    href={`/products/${product._id}`}
-                    onClick={() => {
-                      setShowSuggestions(false);
-                      setSearchTerm("");
-                    }}
-                    className="flex items-center gap-3 px-3 py-2 hover:bg-emerald-50/50 transition-colors"
-                  >
-                    <img
-                      src={imageSrc}
-                      alt={product.name}
-                      className="w-7 h-7 rounded-lg object-cover border border-slate-150 shrink-0"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-bold text-slate-800 truncate">{product.name}</p>
-                    </div>
-                    <span className="text-[11px] font-black text-slate-900 shrink-0">
-                      ৳{Number(product.price || 0).toFixed(2)}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
         </div>
       </header>
 
-      {/* ========================================================= */}
-      {/* ── MOBILE SLIDE-OVER DRAWER MENU ── */}
-      {/* ========================================================= */}
-      {isMobileDrawerOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div
-            ref={drawerRef}
-            className="bg-white w-4/5 max-w-sm h-full shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-300 border-l border-emerald-100"
-          >
-            {/* Drawer Header */}
-            <div>
-              <div className="p-4 border-b border-emerald-100 flex items-center justify-between bg-emerald-50/50">
-                <div className="flex items-center gap-2">
-                  <div className="bg-emerald-600 text-white w-8 h-8 rounded-xl flex items-center justify-center font-bold">
-                    <FaPrescriptionBottleAlt className="text-base" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-slate-900 text-sm leading-tight">
-                      ফুজি মেডিকেল হল
-                    </h3>
-                    <p className="text-[9px] font-extrabold text-emerald-600 leading-none mt-0.5">
-                      বিশ্বস্ত ঔষধ সেবায় ২৭ বছর
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsMobileDrawerOpen(false)}
-                  className="p-1.5 rounded-xl hover:bg-emerald-100/60 text-slate-500 hover:text-slate-800 transition cursor-pointer"
-                >
-                  <MdClose className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* User State Header in Drawer */}
-              <div className="p-4 bg-emerald-900 text-white space-y-3">
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-emerald-200">Welcome to Fuji Medical!</p>
-                </div>
-              </div>
-
-              {/* Navigation Links */}
-              <div className="p-4 space-y-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-2 mb-2">
-                  Navigation
-                </p>
-
-                {navLinks.map((link) => {
-                  const Icon = link.icon;
-                  const isActive = pathname === link.href;
-                  return (
-                    <Link
-                      key={link.name}
-                      href={link.href}
-                      onClick={() => setIsMobileDrawerOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-xl font-bold text-xs transition-all ${
-                        isActive
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200/80"
-                          : "text-slate-700 hover:bg-slate-50"
-                      }`}
-                    >
-                      <Icon className="text-base text-emerald-600" />
-                      <span>{link.name}</span>
-                    </Link>
-                  );
-                })}
-
-                {/* Upload Prescription Link in Drawer */}
-                <button
-                  onClick={() => {
-                    setIsMobileDrawerOpen(false);
-                    setIsPrescriptionModalOpen(true);
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl font-bold text-xs bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-sm cursor-pointer mt-2"
-                >
-                  <MdFileUpload className="text-base" />
-                  <span>Upload Doctor's Prescription</span>
-                </button>
-
-                {user?.role === "admin" && (
-                  <Link
-                    href="/admin/products"
-                    onClick={() => setIsMobileDrawerOpen(false)}
-                    className="flex items-center gap-3 px-3 py-3 rounded-xl font-bold text-xs bg-emerald-100 text-emerald-900 hover:bg-emerald-200 transition border border-emerald-300 mt-2"
-                  >
-                    <MdAdminPanelSettings className="text-base text-emerald-700" />
-                    <span>Admin Dashboard</span>
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            {/* Emergency Hotline & Sign Out Footer */}
-            <div className="p-4 border-t border-slate-100 space-y-3 bg-slate-50">
-              <a
-                href="tel:01700000000"
-                className="flex items-center justify-center gap-2 w-full py-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-black shadow-xs hover:bg-rose-100 transition"
-              >
-                <MdPhoneInTalk className="text-base text-rose-600 animate-bounce" />
-                <span>Hotline: 01700-000000 (24/7)</span>
-              </a>
-
-
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================= */}
-      {/* ── UPLOAD PRESCRIPTION MODAL ── */}
-      {/* ========================================================= */}
+      {/* Mobile Menu & Prescription Modal */}
       {isPrescriptionModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-emerald-100 relative space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
@@ -479,7 +307,7 @@ export default function Navbar() {
             </div>
 
             {prescriptionSuccess ? (
-              <div className="py-8 text-center space-y-3 animate-in zoom-in-95 duration-200">
+              <div className="py-8 text-center space-y-3">
                 <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-3xl">
                   <MdCheckCircle />
                 </div>
@@ -516,9 +344,6 @@ export default function Navbar() {
                     disabled={!prescriptionFile || isUploadingPrescription}
                     className="px-5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
                   >
-                    {isUploadingPrescription && (
-                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    )}
                     {isUploadingPrescription ? "Uploading..." : "Submit Prescription"}
                   </button>
                 </div>

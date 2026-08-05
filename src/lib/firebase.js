@@ -6,7 +6,7 @@ import { getStorage } from "firebase/storage";
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL, // ✅ এটা থাকা must
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
@@ -15,7 +15,12 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
-export const db = getDatabase(app); // Realtime Database (products, categories)
-export const database = db; // alias, so files importing `database` still work
-export const auth = getAuth(app); // Firebase Authentication
-export const storage = getStorage(app); // Firebase Storage (images)
+// Realtime Database — used by all server actions and API routes via REST
+export const db = getDatabase(app);
+export const database = db; // backward-compat alias
+
+// Firebase Auth — used ONLY by admin/login/page.jsx for signInWithEmailAndPassword
+export const auth = getAuth(app);
+
+// Firebase Storage — used by admin product image uploads if needed
+export const storage = getStorage(app);

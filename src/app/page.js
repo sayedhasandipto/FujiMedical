@@ -46,6 +46,7 @@ import Link from "next/link";
 import { getProducts } from "@/app/actions/productActions";
 import { getCategories } from "@/app/actions/categoryActions";
 import { useCart } from "@/context/CartContext";
+import ProductCard from "@/component/ProductCard";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("home");
@@ -391,98 +392,11 @@ export default function Home() {
               </p>
             </div>
           ) : (
-            /* Perfectly responsive 2 columns grid on small screens, scaling up to 5 on large screens */
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-              {filteredProducts.map((product) => {
-                const isOutOfStock =
-                  product.stock !== undefined && product.stock <= 0;
-                return (
-                  <div
-                    key={product._id}
-                    className="p-3 bg-white dark:bg-zinc-900 rounded-2xl border border-emerald-100/60 dark:border-zinc-800 flex flex-col justify-between hover:border-emerald-500 hover:shadow-lg transition-all duration-300 group"
-                  >
-                    <Link
-                      href={`/products/${product._id}`}
-                      className="flex flex-col gap-2"
-                    >
-                      <div className="relative aspect-square w-full rounded-xl bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center overflow-hidden border border-emerald-50/30">
-                        {product.image ? (
-                          <img
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            src={
-                              product.image ||
-                              `https://placehold.co/300x300/10b981/ffffff?text=${encodeURIComponent(product.name || "Medicine")}`
-                            }
-                            alt={product.name}
-                            onError={(e) => {
-                              e.currentTarget.src = `https://placehold.co/300x300/10b981/ffffff?text=${encodeURIComponent(
-                                product.name || "Medicine",
-                              )}`;
-                            }}
-                          />
-                        ) : (
-                          <MdMedication className="w-10 h-10 text-emerald-600/40" />
-                        )}
-
-                        {isOutOfStock ? (
-                          <span className="absolute top-1.5 right-1.5 bg-rose-600 text-white text-[8px] md:text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow flex items-center gap-1">
-                            <MdBlock className="w-2.5 h-2.5" /> Out
-                          </span>
-                        ) : product.category ? (
-                          <span className="absolute top-1.5 right-1.5 bg-emerald-600 text-white text-[8px] md:text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow">
-                            {product.category}
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <div className="mt-0.5 space-y-0.5">
-                        <p className="font-extrabold text-xs md:text-sm text-zinc-900 dark:text-zinc-100 leading-tight truncate group-hover:text-emerald-600 transition">
-                          {product.name}
-                        </p>
-                        {product.genericName && (
-                          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold truncate leading-none">
-                            {product.genericName}
-                          </p>
-                        )}
-                        {product.brand && (
-                          <p className="text-[9px] md:text-[10px] text-zinc-400 dark:text-zinc-500 truncate leading-none">
-                            {product.brand}
-                          </p>
-                        )}
-                      </div>
-                    </Link>
-
-                    <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-zinc-100 dark:border-zinc-800 gap-1">
-                      <div className="min-w-0">
-                        {product.unit && (
-                          <span className="text-[8px] md:text-[9px] text-zinc-400 block font-medium truncate">
-                            {product.unit}
-                          </span>
-                        )}
-                        <span className="text-xs md:text-sm font-black text-emerald-600 dark:text-emerald-400 block truncate">
-                          ৳{Number(product.price || 0).toFixed(2)}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          if (!isOutOfStock) {
-                            addToCart(product, 1);
-                            setIsCartOpen(true);
-                          }
-                        }}
-                        disabled={isOutOfStock}
-                        className={`text-[10px] md:text-xs font-extrabold px-2.5 py-1.5 rounded-xl transition-all shadow-sm shrink-0 cursor-pointer ${
-                          isOutOfStock
-                            ? "bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed border border-slate-300 dark:border-slate-700"
-                            : "bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white"
-                        }`}
-                      >
-                        {isOutOfStock ? "Out" : "Add"}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+            /* Premium responsive e-commerce grid layout. Clean 2 columns on mobile, scaling cleanly to 5 columns on desktop */
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
             </div>
           )}
         </section>
