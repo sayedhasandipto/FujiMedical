@@ -47,12 +47,10 @@ import { getProducts } from "@/app/actions/productActions";
 import { getCategories } from "@/app/actions/categoryActions";
 import { useCart } from "@/context/CartContext";
 import ProductCard from "@/component/ProductCard";
-import BannerSlider from "@/component/BannerSlider";
+import HeroBanner from "@/component/HeroBanner";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeService, setActiveService] = useState("Store");
-  const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showSalesOnly, setShowSalesOnly] = useState(false);
@@ -91,37 +89,7 @@ export default function Home() {
     return matchesSearch && matchesCategory && matchesSales;
   });
 
-  const carouselSlides = [
-    {
-      title: "Safe & Reliable Home Lab Tests",
-      desc: "Sample collection at your doorstep. Reports in 24 hours.",
-      bgClass: "bg-gradient-to-r from-emerald-800 to-teal-700",
-      btnText: "Book Now",
-      action: () => setIsBookModalOpen(true),
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuB8YeXq691WKPk6-VbeWUYdbIzMtMXHoQ3u5bOfy2z754uJlW2eQpHnqPMnwAGgZjDFiottu72OTdMLrEGhcKmihKxsENhWDBNQOYTWJ-w6vq45RkiBkk0Gj-pWvbAsoTcu1x3x85KlYvPa41sAL15CJb2V95lNyXdx45KJvydXLHMidOaev5ligu0ofyX1cG95RRBTvoTaJ5z2spaPgW6UUB8RtpQ5OmaAavvlhBJ257fOyepBn0QMSXdzsekmdKm0gdU9IPwzGGeQ",
-    },
-    {
-      title: "Wholesale Medicines at Best Prices",
-      desc: "Get genuine prescription drugs and OTC medicines in bulk.",
-      bgClass: "bg-gradient-to-r from-teal-800 to-cyan-700",
-      btnText: "Browse Store",
-      action: () => setActiveService("Store"),
-      image:
-        "https://images.unsplash.com/photo-1607619056574-7b8d304f3c6f?w=400&auto=format&fit=crop&q=80",
-    },
-    {
-      title: "Instant Video Consultation",
-      desc: "Connect with certified medical practitioners online within 10 minutes.",
-      bgClass: "bg-gradient-to-r from-emerald-800 via-teal-850 to-emerald-900",
-      btnText: "Consult Now",
-      action: () => setActiveService("Consult"),
-      image:
-        "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&auto=format&fit=crop&q=80",
-    },
-  ];
-
-  // Load live MongoDB data on mount
+  // Load live data on mount
   useEffect(() => {
     async function loadLiveData() {
       setLoading(true);
@@ -136,17 +104,11 @@ export default function Home() {
     loadLiveData();
   }, []);
 
-  const handleBookSubmit = (e) => {
-    e.preventDefault();
-    setIsBookModalOpen(false);
-    alert("Booking requested successfully! We will contact you shortly.");
-  };
-
   return (
     <div className="flex-1 flex flex-col pb-24 min-h-screen text-zinc-800 dark:text-zinc-100">
       <main className="max-w-container-max mx-auto w-full px-3 md:px-8">
-        {/* Hero Carousel Section */}
-        <BannerSlider slides={carouselSlides} />
+        {/* Hero Carousel */}
+        <HeroBanner />
 
         {/* Categories Section */}
         <section id="categories-section" className="py-6">
