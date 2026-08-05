@@ -55,13 +55,18 @@ export default function Home() {
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [showSalesOnly, setShowSalesOnly] = useState(false);
 
   const { addToCart, setIsCartOpen } = useCart();
 
-  // Dynamic state loaded from MongoDB
+  // Dynamic state loaded from Firebase
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const salesCount = products.filter(
+    (p) => p.offerPrice && Number(p.offerPrice) > 0 && Number(p.offerPrice) < Number(p.price)
+  ).length;
 
   const filteredCategories = categories.filter((cat) =>
     cat.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -79,7 +84,11 @@ export default function Home() {
       (p.category &&
         p.category.toLowerCase() === selectedCategory.name?.toLowerCase());
 
-    return matchesSearch && matchesCategory;
+    const matchesSales = !showSalesOnly || (
+      p.offerPrice && Number(p.offerPrice) > 0 && Number(p.offerPrice) < Number(p.price)
+    );
+
+    return matchesSearch && matchesCategory && matchesSales;
   });
 
   const carouselSlides = [
@@ -177,19 +186,37 @@ export default function Home() {
             /* Desktop categories scroll bar */
             <div className="hidden md:flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
               <button
-                onClick={() => setSelectedCategory(null)}
+                onClick={() => { setSelectedCategory(null); setShowSalesOnly(false); }}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                  !selectedCategory
+                  !selectedCategory && !showSalesOnly
                     ? "bg-emerald-600 text-white shadow-md"
                     : "bg-white dark:bg-zinc-900 border border-emerald-100 text-zinc-700 dark:text-zinc-300 hover:bg-emerald-50"
                 }`}
               >
                 All Products
               </button>
+
+              {/* Virtual Sales filter button */}
+              {salesCount > 0 && (
+                <button
+                  onClick={() => { setShowSalesOnly(true); setSelectedCategory(null); }}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                    showSalesOnly
+                      ? "bg-amber-500 text-white shadow-md"
+                      : "bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                  }`}
+                >
+                  🔖 Sales
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-extrabold ${
+                    showSalesOnly ? "bg-white/25 text-white" : "bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300"
+                  }`}>{salesCount}</span>
+                </button>
+              )}
+
               {categories.map((cat) => (
                 <button
                   key={cat._id}
-                  onClick={() => setSelectedCategory(cat)}
+                  onClick={() => { setSelectedCategory(cat); setShowSalesOnly(false); }}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
                     selectedCategory?._id === cat._id
                       ? "bg-emerald-600 text-white shadow-md"
@@ -229,10 +256,11 @@ export default function Home() {
                   <button
                     onClick={() => {
                       setSelectedCategory(null);
+                      setShowSalesOnly(false);
                       setIsFilterOpen(false);
                     }}
                     className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs flex justify-between items-center transition ${
-                      !selectedCategory
+                      !selectedCategory && !showSalesOnly
                         ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
                         : "bg-zinc-50 dark:bg-zinc-900 border border-transparent text-zinc-700 dark:text-zinc-300"
                     }`}
@@ -242,6 +270,27 @@ export default function Home() {
                       {products.length}
                     </span>
                   </button>
+
+                  {/* Mobile Sales filter button */}
+                  {salesCount > 0 && (
+                    <button
+                      onClick={() => {
+                        setShowSalesOnly(true);
+                        setSelectedCategory(null);
+                        setIsFilterOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs flex justify-between items-center transition ${
+                        showSalesOnly
+                          ? "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                          : "bg-zinc-50 dark:bg-zinc-900 border border-transparent text-zinc-700 dark:text-zinc-300"
+                      }`}
+                    >
+                      <span>🔖 Sales</span>
+                      <span className="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold">
+                        {salesCount}
+                      </span>
+                    </button>
+                  )}
 
                   {categories.map((cat) => {
                     const count = products.filter(
@@ -254,6 +303,7 @@ export default function Home() {
                         key={cat._id}
                         onClick={() => {
                           setSelectedCategory(cat);
+                          setShowSalesOnly(false);
                           setIsFilterOpen(false);
                         }}
                         className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs flex justify-between items-center transition ${
@@ -290,17 +340,20 @@ export default function Home() {
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-black dark:text-white font-extrabold text-lg md:text-2xl capitalize">
-                {selectedCategory
+                {showSalesOnly
+                  ? "🔖 Sales"
+                  : selectedCategory
                   ? `${selectedCategory.name} Products`
                   : "All Products"}
               </h3>
               <p className="text-[11px] md:text-xs text-zinc-600 dark:text-zinc-400 font-medium">
                 Showing {filteredProducts.length} products
+                {showSalesOnly && " on sale"}
               </p>
             </div>
-            {selectedCategory && (
+            {(selectedCategory || showSalesOnly) && (
               <button
-                onClick={() => setSelectedCategory(null)}
+                onClick={() => { setSelectedCategory(null); setShowSalesOnly(false); }}
                 className="btn btn-ghost btn-xs text-emerald-700 hover:bg-emerald-50 font-bold cursor-pointer"
               >
                 Clear Filter
