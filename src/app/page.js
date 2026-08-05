@@ -295,8 +295,7 @@ export default function Home() {
                   : "All Products"}
               </h3>
               <p className="text-[11px] md:text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-                Showing live medicines & inventory from MongoDB (
-                {filteredProducts.length} items)
+                Showing {filteredProducts.length} products
               </p>
             </div>
             {selectedCategory && (
@@ -327,8 +326,8 @@ export default function Home() {
               </p>
             </div>
           ) : (
-            /* Premium responsive e-commerce grid layout. Clean 2 columns on mobile, scaling cleanly to 5 columns on desktop */
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+            /* Compact responsive grid */
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {filteredProducts.map((product) => (
                 <ProductCard key={product._id} product={product} />
               ))}
