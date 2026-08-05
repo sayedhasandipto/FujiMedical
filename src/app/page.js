@@ -48,6 +48,7 @@ import { getCategories } from "@/app/actions/categoryActions";
 import { useCart } from "@/context/CartContext";
 import ProductCard from "@/component/ProductCard";
 import HeroBanner from "@/component/HeroBanner";
+import SpecialOfferCards from "@/component/SpecialOfferCards";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -109,6 +110,9 @@ export default function Home() {
       <main className="max-w-container-max mx-auto w-full px-3 md:px-8">
         {/* Hero Carousel */}
         <HeroBanner />
+
+        {/* Special Offer Cards */}
+        <SpecialOfferCards />
 
         {/* Categories Section */}
         <section id="categories-section" className="py-6">

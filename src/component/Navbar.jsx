@@ -14,7 +14,11 @@ import {
   MdCheckCircle,
   MdClose,
 } from "react-icons/md";
-import { FaPrescriptionBottleAlt, FaStethoscope } from "react-icons/fa";
+import {
+  FaHandHoldingMedical,
+  FaPrescriptionBottleAlt,
+  FaStethoscope,
+} from "react-icons/fa";
 import { useCart } from "@/context/CartContext";
 
 export default function Navbar() {
@@ -67,7 +71,7 @@ export default function Navbar() {
       (p) =>
         (p.name && p.name.toLowerCase().includes(query)) ||
         (p.brand && p.brand.toLowerCase().includes(query)) ||
-        (p.genericName && p.genericName.toLowerCase().includes(query))
+        (p.genericName && p.genericName.toLowerCase().includes(query)),
     );
     setSuggestions(filtered.slice(0, 5));
   }, [searchTerm, allProducts]);
@@ -75,7 +79,10 @@ export default function Navbar() {
   // Close live search overlay on outside click
   useEffect(() => {
     function handleClickOutside(event) {
-      if (suggestionRef.current && !suggestionRef.current.contains(event.target)) {
+      if (
+        suggestionRef.current &&
+        !suggestionRef.current.contains(event.target)
+      ) {
         setShowSuggestions(false);
       }
     }
@@ -126,11 +133,13 @@ export default function Navbar() {
       <header className="bg-white/95 backdrop-blur-md w-full top-0 sticky z-45 border-b border-emerald-100 shadow-sm transition-all">
         {/* ── Top Header Row ── */}
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2 md:gap-4">
-          
           {/* Brand Logo & Subtitle */}
-          <Link href="/" className="flex items-center gap-2 md:gap-3 group shrink-0">
-            <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white w-10 h-10 md:w-11 md:h-11 rounded-2xl flex items-center justify-center font-black shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform">
-              <FaPrescriptionBottleAlt className="text-xl md:text-2xl text-white" />
+          <Link
+            href="/"
+            className="flex items-center gap-2 md:gap-3 group shrink-0"
+          >
+            <div className="bg-linear-to-br from-emerald-600 to-teal-700 text-white w-10 h-10 md:w-11 md:h-11 rounded-2xl flex items-center justify-center font-black shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform">
+              <FaHandHoldingMedical className="text-xl md:text-2xl text-white" />
             </div>
             <div>
               <h1 className="text-base md:text-lg font-black text-emerald-950 tracking-tight leading-none group-hover:text-emerald-700 transition-colors">
@@ -143,7 +152,10 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop & Tablet Global Search Input */}
-          <div className="hidden md:block flex-1 max-w-md mx-2 lg:mx-6 relative" ref={suggestionRef}>
+          <div
+            className="hidden md:block flex-1 max-w-md mx-2 lg:mx-6 relative"
+            ref={suggestionRef}
+          >
             <form onSubmit={handleSearchSubmit} className="relative w-full">
               <button
                 type="submit"
@@ -175,7 +187,9 @@ export default function Navbar() {
             {showSuggestions && suggestions.length > 0 && (
               <div className="absolute left-0 right-0 mt-2 bg-white border border-emerald-100 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 max-h-64 overflow-y-auto">
                 {suggestions.map((product) => {
-                  const imageSrc = product.image || `https://placehold.co/48x48/10b981/ffffff?text=${encodeURIComponent(product.name ? product.name.slice(0,2) : "M")}`;
+                  const imageSrc =
+                    product.image ||
+                    `https://placehold.co/48x48/10b981/ffffff?text=${encodeURIComponent(product.name ? product.name.slice(0, 2) : "M")}`;
                   return (
                     <Link
                       key={product._id}
@@ -192,9 +206,13 @@ export default function Navbar() {
                         className="w-8 h-8 rounded-lg object-cover border border-slate-150 shrink-0"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-slate-800 truncate">{product.name}</p>
+                        <p className="text-xs font-bold text-slate-800 truncate">
+                          {product.name}
+                        </p>
                         {product.genericName && (
-                          <p className="text-[10px] text-emerald-600 truncate mt-0.5">{product.genericName}</p>
+                          <p className="text-[10px] text-emerald-600 truncate mt-0.5">
+                            {product.genericName}
+                          </p>
                         )}
                       </div>
                       <span className="text-xs font-black text-slate-900 shrink-0">
@@ -294,8 +312,12 @@ export default function Navbar() {
                   <FaStethoscope className="text-base" />
                 </div>
                 <div>
-                  <h3 className="font-black text-slate-900 text-sm">Upload Prescription</h3>
-                  <p className="text-[11px] text-slate-500">Order medicines directly with your doctor's slip</p>
+                  <h3 className="font-black text-slate-900 text-sm">
+                    Upload Prescription
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Order medicines directly with your doctor's slip
+                  </p>
                 </div>
               </div>
               <button
@@ -311,8 +333,13 @@ export default function Navbar() {
                 <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-3xl">
                   <MdCheckCircle />
                 </div>
-                <h4 className="font-black text-slate-900 text-base">Prescription Uploaded!</h4>
-                <p className="text-xs text-slate-500">Our registered pharmacist will review your slip and contact you shortly.</p>
+                <h4 className="font-black text-slate-900 text-base">
+                  Prescription Uploaded!
+                </h4>
+                <p className="text-xs text-slate-500">
+                  Our registered pharmacist will review your slip and contact
+                  you shortly.
+                </p>
               </div>
             ) : (
               <form onSubmit={handlePrescriptionSubmit} className="space-y-4">
@@ -321,14 +348,20 @@ export default function Navbar() {
                     type="file"
                     accept="image/*,.pdf"
                     required
-                    onChange={(e) => setPrescriptionFile(e.target.files?.[0] || null)}
+                    onChange={(e) =>
+                      setPrescriptionFile(e.target.files?.[0] || null)
+                    }
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                   <MdFileUpload className="w-10 h-10 text-emerald-600 mx-auto mb-2" />
                   <p className="text-xs font-bold text-slate-700">
-                    {prescriptionFile ? prescriptionFile.name : "Click or drag your Prescription image here"}
+                    {prescriptionFile
+                      ? prescriptionFile.name
+                      : "Click or drag your Prescription image here"}
                   </p>
-                  <p className="text-[10px] text-slate-400 mt-1">Supports JPG, PNG, PDF (Max 5MB)</p>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Supports JPG, PNG, PDF (Max 5MB)
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-2">
@@ -344,7 +377,9 @@ export default function Navbar() {
                     disabled={!prescriptionFile || isUploadingPrescription}
                     className="px-5 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
                   >
-                    {isUploadingPrescription ? "Uploading..." : "Submit Prescription"}
+                    {isUploadingPrescription
+                      ? "Uploading..."
+                      : "Submit Prescription"}
                   </button>
                 </div>
               </form>
