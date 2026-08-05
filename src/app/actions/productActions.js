@@ -1,12 +1,7 @@
 "use server";
 
-import { db } from "@/lib/firebase";
 import { cookies } from "next/headers";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { ref, get, push, set, update, remove } from "firebase/database";
-
-const SERVER_URL =
-  process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
 
 // Admin Verification using HTTP-only Cookie (same system as categoryActions.js)
 async function verifyAdmin() {
@@ -40,14 +35,22 @@ function normalizeProduct(id, item) {
 
 export async function getProducts() {
   try {
-    const productsRef = ref(db, "products");
-    const snapshot = await get(productsRef);
-
-    if (!snapshot.exists()) {
-      return { success: true, data: [] };
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return { success: false, error: "Firebase database URL not configured" };
     }
 
-    const productsData = snapshot.val();
+    const res = await fetch(`${DB_URL}/products.json`, { cache: "no-store" });
+
+    if (!res.ok) {
+      throw new Error(`Firebase REST error: ${res.status}`);
+    }
+
+    const productsData = await res.json();
+
+    if (!productsData) {
+      return { success: true, data: [] };
+    }
 
     const products = Object.entries(productsData).map(([id, item]) =>
       normalizeProduct(id, item),
@@ -109,31 +112,24 @@ export async function createProduct(data) {
       updatedAt: new Date().toISOString(),
     };
 
-    // Optional: try external Express server first
-    try {
-      const res = await fetch(`${SERVER_URL}/api/products`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        const json = await res.json();
-        revalidatePath("/admin/products");
-        revalidatePath("/");
-        revalidatePath("/categories");
-        return { success: true, data: json.data };
-      }
-    } catch (serverErr) {
-      console.warn(
-        "Express server POST failed, falling back to Firebase:",
-        serverErr.message,
-      );
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return { success: false, error: "Firebase database URL not configured" };
     }
 
-    // Fallback: write directly to Realtime Database
-    const productsRef = ref(db, "products");
-    const newProductRef = push(productsRef);
-    await set(newProductRef, payload);
+    const pushRes = await fetch(`${DB_URL}/products.json`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!pushRes.ok) {
+      const errText = await pushRes.text();
+      throw new Error(`Firebase REST error ${pushRes.status}: ${errText}`);
+    }
+
+    const pushData = await pushRes.json();
+    const newKey = pushData.name;
 
     revalidateTag("products");
     revalidatePath("/admin/products");
@@ -142,7 +138,7 @@ export async function createProduct(data) {
 
     return {
       success: true,
-      data: { _id: newProductRef.key, ...payload },
+      data: { _id: newKey, ...payload },
     };
   } catch (error) {
     return { success: false, error: error.message };
@@ -152,22 +148,6 @@ export async function createProduct(data) {
 export async function updateProduct(id, data) {
   try {
     await verifyAdmin();
-
-    try {
-      const res = await fetch(`${SERVER_URL}/api/products/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        revalidatePath("/admin/products");
-        revalidatePath("/");
-        revalidatePath("/categories");
-        return { success: true };
-      }
-    } catch (serverErr) {
-      console.warn("Express server PUT failed:", serverErr.message);
-    }
 
     const updateData = { updatedAt: new Date().toISOString() };
 
@@ -188,7 +168,21 @@ export async function updateProduct(id, data) {
     if (data.prescriptionRequired !== undefined)
       updateData.prescriptionRequired = data.prescriptionRequired;
 
-    await update(ref(db, `products/${id}`), updateData);
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return { success: false, error: "Firebase database URL not configured" };
+    }
+
+    const patchRes = await fetch(`${DB_URL}/products/${id}.json`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updateData),
+    });
+
+    if (!patchRes.ok) {
+      const errText = await patchRes.text();
+      throw new Error(`Firebase REST error ${patchRes.status}: ${errText}`);
+    }
 
     revalidateTag("products");
     revalidatePath("/admin/products");
@@ -205,24 +199,19 @@ export async function deleteProduct(id) {
   try {
     await verifyAdmin();
 
-    try {
-      const res = await fetch(`${SERVER_URL}/api/products/${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        revalidatePath("/admin/products");
-        revalidatePath("/");
-        revalidatePath("/categories");
-        return { success: true };
-      }
-    } catch (serverErr) {
-      console.warn(
-        "Express server DELETE failed, falling back to Firebase:",
-        serverErr.message,
-      );
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return { success: false, error: "Firebase database URL not configured" };
     }
 
-    await remove(ref(db, `products/${id}`));
+    const deleteRes = await fetch(`${DB_URL}/products/${id}.json`, {
+      method: "DELETE",
+    });
+
+    if (!deleteRes.ok) {
+      const errText = await deleteRes.text();
+      throw new Error(`Firebase REST error ${deleteRes.status}: ${errText}`);
+    }
 
     revalidateTag("products");
     revalidatePath("/admin/products");

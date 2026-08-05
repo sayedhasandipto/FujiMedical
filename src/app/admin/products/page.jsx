@@ -10,8 +10,6 @@ import {
 } from "@/app/actions/productActions";
 import { getCategories } from "@/app/actions/categoryActions";
 import { uploadImageToImgbb } from "@/app/actions/imageActions";
-import { database } from "@/lib/firebase";
-import { ref as dbRef, push } from "firebase/database";
 import {
   FiPlus,
   FiBox,
@@ -177,22 +175,25 @@ export default function AdminProductsPage() {
           setErrorMsg(res.error || "Failed to update product.");
         }
       } else {
-        // 3. Push new product to Firebase Realtime Database under "products"
-        await push(dbRef(database, "products"), productData);
-
+        // 3. Call the server action to create the product
+        const res = await createProduct(productData);
         setSubmitting(false);
-        setShowModal(false);
-        setImageFile(null);
-        setForm({
-          name: "",
-          description: "",
-          price: "",
-          offerPrice: "",
-          stock: "10",
-          category: categories[0]?.name || "",
-          image: "",
-        });
-        loadData();
+        if (res.success) {
+          setShowModal(false);
+          setImageFile(null);
+          setForm({
+            name: "",
+            description: "",
+            price: "",
+            offerPrice: "",
+            stock: "10",
+            category: categories[0]?.name || "",
+            image: "",
+          });
+          loadData();
+        } else {
+          setErrorMsg(res.error || "Failed to create product.");
+        }
       }
     } catch (err) {
       setSubmitting(false);

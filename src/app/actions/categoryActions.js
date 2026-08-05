@@ -3,10 +3,6 @@
 import { cookies } from "next/headers";
 import { revalidatePath, revalidateTag } from "next/cache";
 
-import { ref, get, push, update, remove, set } from "firebase/database";
-
-import { db } from "@/lib/firebase";
-
 // Admin Verification using HTTP-only Cookie
 async function verifyAdmin() {
   const cookieStore = await cookies();
@@ -21,19 +17,29 @@ async function verifyAdmin() {
 
 export async function getCategories() {
   try {
-    const categoriesRef = ref(db, "categories");
-    const productsRef = ref(db, "products");
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return { success: false, error: "Firebase database URL not configured" };
+    }
 
-    const [categoriesSnap, productsSnap] = await Promise.all([
-      get(categoriesRef),
-      get(productsRef),
+    const [categoriesRes, productsRes] = await Promise.all([
+      fetch(`${DB_URL}/categories.json`, { cache: "no-store" }),
+      fetch(`${DB_URL}/products.json`, { cache: "no-store" }),
     ]);
+
+    if (!categoriesRes.ok) {
+      throw new Error(`Firebase categories REST error: ${categoriesRes.status}`);
+    }
+    if (!productsRes.ok) {
+      throw new Error(`Firebase products REST error: ${productsRes.status}`);
+    }
+
+    const categoriesData = await categoriesRes.json();
+    const productsData = await productsRes.json();
 
     const categoryMap = new Map();
 
-    if (categoriesSnap.exists()) {
-      const categoriesData = categoriesSnap.val();
-
+    if (categoriesData) {
       Object.entries(categoriesData).forEach(([id, data]) => {
         categoryMap.set(data.name.trim().toLowerCase(), {
           _id: id,
@@ -44,9 +50,7 @@ export async function getCategories() {
       });
     }
 
-    if (productsSnap.exists()) {
-      const productsData = productsSnap.val();
-
+    if (productsData) {
       Object.values(productsData).forEach((data, index) => {
         if (data.category) {
           const key = data.category.trim().toLowerCase();
@@ -88,15 +92,31 @@ export async function createCategory(data) {
       };
     }
 
-    const categoriesRef = ref(db, "categories");
-    const newCategoryRef = push(categoriesRef);
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return { success: false, error: "Firebase database URL not configured" };
+    }
 
-    await set(newCategoryRef, {
+    const payload = {
       name,
       description,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+    };
+
+    const pushRes = await fetch(`${DB_URL}/categories.json`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
+
+    if (!pushRes.ok) {
+      const errText = await pushRes.text();
+      throw new Error(`Firebase REST error ${pushRes.status}: ${errText}`);
+    }
+
+    const pushData = await pushRes.json();
+    const newKey = pushData.name;
 
     revalidateTag("categories");
     revalidatePath("/admin/categories");
@@ -106,7 +126,7 @@ export async function createCategory(data) {
     return {
       success: true,
       data: {
-        _id: newCategoryRef.key,
+        _id: newKey,
         name,
         description,
       },
@@ -123,8 +143,6 @@ export async function updateCategory(id, data) {
   try {
     await verifyAdmin();
 
-    const categoryRef = ref(db, `categories/${id}`);
-
     const updateData = {
       updatedAt: new Date().toISOString(),
     };
@@ -133,7 +151,21 @@ export async function updateCategory(id, data) {
     if (data.description !== undefined)
       updateData.description = data.description.trim();
 
-    await update(categoryRef, updateData);
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return { success: false, error: "Firebase database URL not configured" };
+    }
+
+    const patchRes = await fetch(`${DB_URL}/categories/${id}.json`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updateData),
+    });
+
+    if (!patchRes.ok) {
+      const errText = await patchRes.text();
+      throw new Error(`Firebase REST error ${patchRes.status}: ${errText}`);
+    }
 
     revalidateTag("categories");
     revalidatePath("/admin/categories");
@@ -155,7 +187,19 @@ export async function deleteCategory(id) {
   try {
     await verifyAdmin();
 
-    await remove(ref(db, `categories/${id}`));
+    const DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
+    if (!DB_URL) {
+      return { success: false, error: "Firebase database URL not configured" };
+    }
+
+    const deleteRes = await fetch(`${DB_URL}/categories/${id}.json`, {
+      method: "DELETE",
+    });
+
+    if (!deleteRes.ok) {
+      const errText = await deleteRes.text();
+      throw new Error(`Firebase REST error ${deleteRes.status}: ${errText}`);
+    }
 
     revalidateTag("categories");
     revalidatePath("/admin/categories");
