@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 const SERVER_URL =
   process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
@@ -177,6 +177,7 @@ export async function updateOrderStatus(id, orderStatus) {
       throw new Error(`Firebase REST error: ${res.status}`);
     }
 
+    revalidatePath("/");
     revalidatePath("/admin/orders");
     revalidatePath("/track-order");
     revalidateTag("orders");

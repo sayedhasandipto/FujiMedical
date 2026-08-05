@@ -112,9 +112,11 @@ export async function PATCH(req) {
 
     // Clear and force revalidation of caching across Next.js paths
     const { revalidatePath, revalidateTag } = await import("next/cache");
+    revalidatePath("/");
     revalidatePath("/admin/orders");
     revalidatePath("/track-order");
     revalidateTag("orders");
+
 
     return NextResponse.json({ success: true });
   } catch (error) {

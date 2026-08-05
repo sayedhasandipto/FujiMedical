@@ -65,9 +65,9 @@ export default function ProductCard({ product }) {
 
         {/* Text Metadata */}
         <div className="space-y-1.5 min-h-[90px] flex flex-col justify-start">
-          <h4 className="font-extrabold text-sm md:text-base text-slate-900 dark:text-slate-100 leading-snug line-clamp-2 group-hover:text-emerald-600 transition-colors">
+          <h3 className="font-extrabold text-sm md:text-base text-slate-900 dark:text-slate-100 leading-snug line-clamp-2 group-hover:text-emerald-600 transition-colors">
             {product.name}
-          </h4>
+          </h3>
           
           {product.genericName && (
             <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 line-clamp-1">
@@ -99,6 +99,7 @@ export default function ProductCard({ product }) {
         <button
           onClick={handleAddToCart}
           disabled={isOutOfStock}
+          aria-label={isOutOfStock ? `${product.name} — Out of stock` : `Add ${product.name} to cart`}
           className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer ${
             isOutOfStock
               ? "bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed border border-slate-200 dark:border-slate-700"

@@ -16,9 +16,16 @@ export default function BannerSlider({ slides }) {
   }, [slides.length]);
 
   return (
-    <section className="relative overflow-hidden rounded-3xl h-[280px] sm:h-[320px] md:h-[380px] mt-8 group border border-emerald-100/30 dark:border-zinc-800/80 shadow-lg">
+    <section
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Featured services banner"
+      className="relative overflow-hidden rounded-3xl h-[280px] sm:h-[320px] md:h-[380px] mt-8 group border border-emerald-100/30 dark:border-zinc-800/80 shadow-lg"
+    >
       {/* Slider Track */}
       <div
+        aria-live="polite"
+        aria-atomic="true"
         className="flex transition-transform duration-700 ease-in-out h-full"
         style={{
           transform: `translateX(-${currentSlide * 100}%)`,
@@ -28,6 +35,9 @@ export default function BannerSlider({ slides }) {
         {slides.map((slide, idx) => (
           <div
             key={idx}
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`Slide ${idx + 1} of ${slides.length}: ${slide.title}`}
             className={`w-full h-full relative flex items-center shrink-0 min-w-full overflow-hidden ${slide.bgClass || "bg-gradient-to-r from-emerald-800 to-teal-700"}`}
           >
             {/* Dark/Gradient Overlay for Mobile Background Layer */}
