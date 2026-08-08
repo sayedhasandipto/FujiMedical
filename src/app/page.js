@@ -64,7 +64,10 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   const salesCount = products.filter(
-    (p) => p.offerPrice && Number(p.offerPrice) > 0 && Number(p.offerPrice) < Number(p.price)
+    (p) =>
+      p.offerPrice &&
+      Number(p.offerPrice) > 0 &&
+      Number(p.offerPrice) < Number(p.price),
   ).length;
 
   const filteredCategories = categories.filter((cat) =>
@@ -83,9 +86,11 @@ export default function Home() {
       (p.category &&
         p.category.toLowerCase() === selectedCategory.name?.toLowerCase());
 
-    const matchesSales = !showSalesOnly || (
-      p.offerPrice && Number(p.offerPrice) > 0 && Number(p.offerPrice) < Number(p.price)
-    );
+    const matchesSales =
+      !showSalesOnly ||
+      (p.offerPrice &&
+        Number(p.offerPrice) > 0 &&
+        Number(p.offerPrice) < Number(p.price));
 
     return matchesSearch && matchesCategory && matchesSales;
   });
@@ -152,7 +157,10 @@ export default function Home() {
             /* Desktop categories scroll bar */
             <div className="hidden md:flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
               <button
-                onClick={() => { setSelectedCategory(null); setShowSalesOnly(false); }}
+                onClick={() => {
+                  setSelectedCategory(null);
+                  setShowSalesOnly(false);
+                }}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
                   !selectedCategory && !showSalesOnly
                     ? "bg-emerald-600 text-white shadow-md"
@@ -165,7 +173,10 @@ export default function Home() {
               {/* Virtual Sales filter button */}
               {salesCount > 0 && (
                 <button
-                  onClick={() => { setShowSalesOnly(true); setSelectedCategory(null); }}
+                  onClick={() => {
+                    setShowSalesOnly(true);
+                    setSelectedCategory(null);
+                  }}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
                     showSalesOnly
                       ? "bg-amber-500 text-white shadow-md"
@@ -173,16 +184,25 @@ export default function Home() {
                   }`}
                 >
                   🔖 Sales
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-extrabold ${
-                    showSalesOnly ? "bg-white/25 text-white" : "bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300"
-                  }`}>{salesCount}</span>
+                  <span
+                    className={`text-[9px] px-1.5 py-0.5 rounded-full font-extrabold ${
+                      showSalesOnly
+                        ? "bg-white/25 text-white"
+                        : "bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300"
+                    }`}
+                  >
+                    {salesCount}
+                  </span>
                 </button>
               )}
 
               {categories.map((cat) => (
                 <button
                   key={cat._id}
-                  onClick={() => { setSelectedCategory(cat); setShowSalesOnly(false); }}
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    setShowSalesOnly(false);
+                  }}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
                     selectedCategory?._id === cat._id
                       ? "bg-emerald-600 text-white shadow-md"
@@ -309,8 +329,8 @@ export default function Home() {
                 {showSalesOnly
                   ? "🔖 Sales"
                   : selectedCategory
-                  ? `${selectedCategory.name} Products`
-                  : "All Products"}
+                    ? `${selectedCategory.name} Products`
+                    : "All Products"}
               </h3>
               <p className="text-[11px] md:text-xs text-zinc-600 dark:text-zinc-400 font-medium">
                 Showing {filteredProducts.length} products
@@ -319,7 +339,10 @@ export default function Home() {
             </div>
             {(selectedCategory || showSalesOnly) && (
               <button
-                onClick={() => { setSelectedCategory(null); setShowSalesOnly(false); }}
+                onClick={() => {
+                  setSelectedCategory(null);
+                  setShowSalesOnly(false);
+                }}
                 className="btn btn-ghost btn-xs text-emerald-700 hover:bg-emerald-50 font-bold cursor-pointer"
               >
                 Clear Filter

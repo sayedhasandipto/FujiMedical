@@ -73,30 +73,6 @@ const CARDS = [
     href: "#products",
   },
   {
-    id: "healthcare",
-    gradient: "linear-gradient(160deg, #f2e2ff 0%, #b27bfd 45%, #7b2cbf 100%)",
-    iconBg: "#8a3ab9",
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="white"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="w-6 h-6"
-      >
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-      </svg>
-    ),
-    topLabel: "UPTO",
-    title: "60% OFF",
-    subtitle: "+ Cashback",
-    btnText: "HealthCare",
-    btnColor: "#8a3ab9",
-    href: "#healthcare",
-  },
-  {
     id: "call",
     gradient: "linear-gradient(160deg, #ffe5d3 0%, #ffa566 45%, #e65100 100%)",
     iconBg: "#f37021",
@@ -128,36 +104,38 @@ function OfferCard({ card }) {
   return (
     <div
       onClick={handleClick}
-      className="relative flex-shrink-0 w-[180px] sm:w-[200px] h-[195px] flex flex-col justify-between rounded-[26px] p-4 overflow-hidden cursor-pointer select-none transition-transform duration-200 hover:-translate-y-1 shadow-sm"
+      className="relative shrink-0 w-[calc(50%-6px)] sm:w-[200px] h-[155px] sm:h-[195px] flex flex-col justify-between rounded-[20px] sm:rounded-[26px] p-3 sm:p-4 overflow-hidden cursor-pointer select-none transition-transform duration-200 hover:-translate-y-1 shadow-sm"
       style={{ background: card.gradient }}
     >
       {/* Aroggo Curved Icon Arc Background */}
-      <div className="absolute top-0 right-0 w-20 h-20 bg-white/20 rounded-bl-[50px] flex items-center justify-center pl-3 pb-3">
+      <div className="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-bl-[40px] sm:rounded-bl-[50px] flex items-center justify-center pl-2 pb-2 sm:pl-3 sm:pb-3">
         <div
-          className="w-12 h-12 rounded-full flex items-center justify-center shadow-md"
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-md"
           style={{ backgroundColor: card.iconBg }}
         >
-          {card.icon}
+          <div className="scale-75 sm:scale-100 flex items-center justify-center">
+            {card.icon}
+          </div>
         </div>
       </div>
 
       {/* Card Details */}
-      <div className="relative z-10 pt-1 pr-12">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-black/70 mb-1">
+      <div className="relative z-10 pt-1 pr-10 sm:pr-12">
+        <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-black/70 mb-0.5 sm:mb-1">
           {card.topLabel}
         </p>
-        <h3 className="text-[18px] sm:text-[20px] font-black text-slate-900 leading-tight">
+        <h3 className="text-[15px] sm:text-[20px] font-black text-slate-900 leading-tight">
           {card.title}
         </h3>
-        <p className="text-[12px] sm:text-[13px] font-semibold text-slate-800 mt-1">
+        <p className="text-[10px] sm:text-[13px] font-semibold text-slate-800 mt-0.5 sm:mt-1">
           {card.subtitle}
         </p>
       </div>
 
       {/* Bottom Button */}
-      <div className="relative z-10 w-full mt-2">
+      <div className="relative z-10 w-full mt-1 sm:mt-2">
         <button
-          className="w-full py-2.5 px-2 bg-white rounded-xl text-[12px] sm:text-[13px] font-extrabold shadow-sm transition-transform active:scale-95 truncate"
+          className="w-full py-1.5 sm:py-2.5 px-2 bg-white rounded-lg sm:rounded-xl text-[10px] sm:text-[13px] font-extrabold shadow-sm transition-transform active:scale-95 truncate"
           style={{ color: card.btnColor }}
         >
           {card.btnText}
@@ -178,8 +156,8 @@ export default function SpecialOfferCards() {
         </h2>
       </div>
 
-      {/* Scrollable Container with Hidden Scrollbar */}
-      <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto pb-4 pt-1 px-4 no-scrollbar scroll-smooth">
+      {/* Responsive Container */}
+      <div className="flex flex-wrap justify-center gap-3 sm:gap-4 pb-4 pt-1 px-4">
         {CARDS.map((card) => (
           <OfferCard key={card.id} card={card} />
         ))}
