@@ -105,7 +105,7 @@ export default function AdminLayout({ children }) {
             <div className="truncate min-w-0">
               <p className="font-bold text-slate-200 text-xs truncate">Admin</p>
               <p className="text-slate-500 text-[11px] truncate">
-                admin@fujimedical.com
+                fujimedicalhall@gmail.com
               </p>
             </div>
           </div>

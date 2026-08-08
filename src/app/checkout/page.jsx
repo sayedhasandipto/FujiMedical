@@ -248,7 +248,7 @@ export default function CheckoutPage() {
                   <input
                     type="tel"
                     required
-                    placeholder="01700000000"
+                    placeholder="01826637443"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     style={{
@@ -407,7 +407,7 @@ export default function CheckoutPage() {
                     }}
                   >
                     <p style={{fontSize: "12px", fontWeight: "800", color: paymentMethod === "bKash" ? "#a21caf" : "#374151"}}>bKash Mobile Banking</p>
-                    <p style={{fontSize: "11px", color: "#6b7280", marginTop: "4px"}}>Send money to 01700000000</p>
+                    <p style={{fontSize: "11px", color: "#6b7280", marginTop: "4px"}}>Send money to 01826637443</p>
                   </button>
                 </div>
 
@@ -415,7 +415,7 @@ export default function CheckoutPage() {
                   <div className="mt-4 p-4 rounded-2xl bg-fuchsia-50/50 border border-fuchsia-200 space-y-4 animate-in fade-in slide-in-from-top-2 duration-150">
                     <div className="text-xs text-fuchsia-800">
                       <p className="font-bold">Instructions:</p>
-                      <p className="mt-1">Please Send Money ৳{totalAmount.toFixed(2)} to our Merchant Account: <strong>01700000000</strong>. Then enter your bKash mobile number and the Transaction ID below.</p>
+                      <p className="mt-1">Please Send Money ৳{totalAmount.toFixed(2)} to our Merchant Account: <strong>01826637443</strong>. Then enter your bKash mobile number and the Transaction ID below.</p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

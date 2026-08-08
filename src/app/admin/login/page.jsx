@@ -77,7 +77,7 @@ export default function AdminLoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@fujimedicalhall.com"
+              placeholder="fujimedicalhall@gmail.com"
               required
               className="w-full border border-slate-800 bg-slate-950 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white"
             />

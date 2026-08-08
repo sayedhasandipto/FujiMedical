@@ -15,10 +15,10 @@ const CARDS = [
     ),
     topLabel: "Order",
     title: "Via WhatsApp",
-    subtitle: "01810117100",
+    subtitle: "01826637443",
     btnText: "Call Now",
     btnColor: "#25D366",
-    href: "https://wa.me/8801810117100",
+    href: "https://wa.me/8801826637443",
   },
   {
     id: "prescription",

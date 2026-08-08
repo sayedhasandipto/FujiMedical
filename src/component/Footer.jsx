@@ -26,7 +26,7 @@ const Footer = () => {
             />
           </div>
           <p className="text-emerald-400/70 text-xs mt-2 text-center">
-            ফুজি মেডিকেল হল — Bakshigonj, Jamalpur
+            ফুজি মেডিকেল হল — বাসস্টেন্ড মোড়, বকশীগঞ্জ, জামালপুর
           </p>
         </div>
       </div>
@@ -65,27 +65,27 @@ const Footer = () => {
                   className="text-emerald-400 shrink-0 mt-0.5"
                 />
                 <span>
-                  ফুজি মেডিকেল হল, ঢাকা
+                  ফুজি মেডিকেল হল,
                   <br />
-                  Bangladesh
+                  বাসস্টেন্ড মোড়, বকশীগঞ্জ, জামালপুর
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <MdPhone size={20} className="text-emerald-400 shrink-0" />
                 <a
-                  href="tel:+8801700000000"
+                  href="tel:+8801826637443"
                   className="hover:text-white transition"
                 >
-                  +880 1700 000000
+                  +8801826637443
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <MdEmail size={20} className="text-emerald-400 shrink-0" />
                 <a
-                  href="mailto:support@fujimedical.com"
+                  href="mailto:fujimedicalhall@gmail.com"
                   className="hover:text-white transition"
                 >
-                  support@fujimedical.com
+                  fujimedicalhall@gmail.com
                 </a>
               </li>
             </ul>

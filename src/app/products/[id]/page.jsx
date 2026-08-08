@@ -18,8 +18,8 @@ import {
   MdBlock,
 } from "react-icons/md";
 import { FaWhatsapp } from "react-icons/fa";
-const WHATSAPP_NUMBER = "8801700000000";
-const PHONE_NUMBER = "+8801700000000";
+const WHATSAPP_NUMBER = "8801826637443";
+const PHONE_NUMBER = "+8801826637443";
 
 export default function ProductDetailPage() {
   const params = useParams();
