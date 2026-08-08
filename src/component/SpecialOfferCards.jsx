@@ -186,7 +186,7 @@ export default function SpecialOfferCards() {
       </div>
 
       {/* Clean Utility Style */}
-      <style jsx global>{`
+      <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
         }
